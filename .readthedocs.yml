@@ -1,0 +1,12 @@
+
+# Required
+version: 2
+
+sphinx:
+  configuration: docs/conf.py
+
+python:
+  version: 3.7
+
+conda:
+  environment: devtools/conda-envs/test_env.yaml
