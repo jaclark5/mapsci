@@ -50,12 +50,17 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
+    'sphinx.ext.todo',
+    'sphinxarg.ext',
 ]
 
 autosummary_generate = True
+autosummary_imported_members = True
+add_module_names = False
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
+todo_include_todos = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

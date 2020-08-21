@@ -1,0 +1,13 @@
+name: test
+channels:
+dependencies:
+    # Base depends
+  - python
+  - pip
+  - numpy
+  - scipy
+  - matplotlib
+  - sphinx-argparse
+
+
+

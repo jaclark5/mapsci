@@ -13,6 +13,12 @@ Welcome to MAPSCI's documentation!
    getting_started
    api
 
+.. currentmodule:: mapsci
+.. autosummary::
+   :toctree: _autosummary
+
+   multipole_mie_combining_rules
+
 
 
 Indices and tables
