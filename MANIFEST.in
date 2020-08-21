@@ -1,0 +1,6 @@
+include LICENSE
+include MANIFEST.in
+include versioneer.py
+
+graft mapsci
+global-exclude *.py[cod] __pycache__ *.so
