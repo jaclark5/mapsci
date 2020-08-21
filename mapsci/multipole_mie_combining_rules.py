@@ -5,8 +5,6 @@ MAPSCI: Multipole Approach of Predicting and Scaling Cross Interactions
 Handles the primary functions
 """
 
-import sys
-import os
 import numpy as np
 #import matplotlib.pyplot as plt
 import scipy.optimize as spo
@@ -359,7 +357,7 @@ def fit_polarizability(r, bead_dict, tol=0.05, shape_factor_scale=False):
     #sys.exit("stop")
 
     if np.diag(var_matrix) / pol_tmp > tol:
-        eps_fit = test_polarizability(pol_tmp, bead_dict_new, r, plot_fit=True)
+        _ = test_polarizability(pol_tmp, bead_dict_new, r, plot_fit=True)
         #print("pol",pol_tmp[0],"eps_orig",bead_dict_new["epsilon"],"eps_fit",eps_fit)
         #print("    Note that these calculated values for this test are blind to the shape factor transform and should be corrected if necessary")
     
@@ -406,19 +404,19 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
 
     logger.info("Refitting attractive exponent with estimated polarizability of {} yields: lamba_a {}, epsilon {}".format(bead_dict_new["polarizability"],output["l_a_fit"],output["epsilon_fit"]))
 
-    if plot_fit:
-        w_mie = calc_mie_attractive_potential(r, bead_dict_new)
-        bead_dict_plot = bead_dict_new.copy()
-        bead_dict_plot.update({"epsilon": output["epsilon_fit"], "l_a": output["l_a_fit"]})
-        w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot)
-       # plt.figure(1)
-       # plt.plot(r,w_mie,"--k",label="Mie")
-       # plt.plot(r,w_mie_fit,"--r",label="Mie fit")
-        multipole_terms = calc_cross_multipole_terms(bead_dict_new,bead_dict_new)
-        #print("charge-dipole, charge-induced_dipole, induced_dipole-induced_dipole, dipole-dipole, dipole-induced_dipole, charge-quadrupole, dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole")
-        #print(multipole_terms, "\n\n")
-        potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
-        #plot_multipole_potential(r, potential, potential_terms=potential_terms)
+    #if plot_fit:
+    #    w_mie = calc_mie_attractive_potential(r, bead_dict_new)
+    #    bead_dict_plot = bead_dict_new.copy()
+    #    bead_dict_plot.update({"epsilon": output["epsilon_fit"], "l_a": output["l_a_fit"]})
+    #    w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot)
+    #    plt.figure(1)
+    #    plt.plot(r,w_mie,"--k",label="Mie")
+    #    plt.plot(r,w_mie_fit,"--r",label="Mie fit")
+    #    multipole_terms = calc_cross_multipole_terms(bead_dict_new,bead_dict_new)
+    #    logger.debug("charge-dipole, charge-induced_dipole, induced_dipole-induced_dipole, dipole-dipole, dipole-induced_dipole, charge-quadrupole, dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole")
+    #    logger.debug(multipole_terms, "\n\n")
+    #    potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
+    #    plot_multipole_potential(r, potential, potential_terms=potential_terms)
 
     return output["epsilon_fit"]
 
@@ -770,9 +768,7 @@ def solve_multipole_cross_interaction_integral(sigma0, beadA, beadB, multipole_t
 
     if beadAB is None:
         beadAB = mixed_parameters(beadA,beadB)
-    sigmaij  = beadAB["sigma"] 
-    l_a = beadAB["l_a"]
-    l_r = beadAB["l_r"]
+
     eps_tmp = beadAB["epsilon"]
 
     Cmultipole, multipole_int_terms0 = multipole_integral(sigma0, beadA, beadB, multipole_terms=multipole_terms)
@@ -783,6 +779,9 @@ def solve_multipole_cross_interaction_integral(sigma0, beadA, beadB, multipole_t
 
     # __ Remove these lines so that we would have an accurate representation of the contributions without the mie terms
     # __ Add these lines back in to be able to add the multipole terms to equal the energy parameter
+    #sigmaij  = beadAB["sigma"]
+    #l_a = beadAB["l_a"]
+    #l_r = beadAB["l_r"]
     #Cmie = (sigma/sigmaij)**l_a * (l_a - 3) / prefactor(l_r,l_a)
     #if shape_factor_scale:
     #    Cmie = Cmie/beadA["Sk"]/beadB["Sk"] 
@@ -1224,7 +1223,6 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
             for bead2 in beads[i+1:]:
                 if np.any(np.isnan([bead_library_new[bead1]["polarizability"], bead_library_new[bead2]["polarizability"]])):
                      raise ValueError("Error: polarizabilities of {} and {}: {}, {}".format(bead1,bead2,bead_library_new[bead1]["polarizability"],bead_library_new[bead2]["polarizability"]))
-                     continue
 
                 cross_out = fit_multipole_cross_interaction_parameter(bead_library_new[bead1], bead_library_new[bead2], distance_dict=distance_dict, shape_factor_scale=shape_factor_scale,temperature=temperature)
                 
@@ -1298,7 +1296,6 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
                 beadB = bead_library_new[bead2]
                 if np.any(np.isnan([beadA["polarizability"], beadB["polarizability"]])):
                      raise ValueError("Error: polarizabilities of {} and {}: {}, {}".format(bead1,bead2,beadA["polarizability"],beadB["polarizability"]))
-                     continue
 
                 beadAB = mixed_parameters(beadA,beadB)
                 r = calc_distance_array(beadAB, **distance_dict)

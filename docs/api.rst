@@ -1,7 +1,8 @@
 API Documentation
 =================
 
+.. currentmodule:: mapsci
 .. autosummary::
-   :toctree: autosummary
+   :toctree: _autosummary
 
-   mapsci.canvas
+   multipole_mie_combining_rules

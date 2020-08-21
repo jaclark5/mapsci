@@ -51,7 +51,6 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
     'sphinx.ext.todo',
-    'sphinxarg.ext',
 ]
 
 autosummary_generate = True

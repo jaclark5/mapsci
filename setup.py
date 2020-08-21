@@ -43,7 +43,7 @@ setup(
 
     # Allows `setup.py test` to work correctly with pytest
     setup_requires=["numpy","scipy"] + pytest_runner,
-    extras_require={'extra': ['cython']},
+    extras_require={'extra': ["numpy","scipy"]},
 
     # Additional entries you may want simply uncomment the lines you want and fill in the data
     # url='http://www.my_package.com',  # Website
