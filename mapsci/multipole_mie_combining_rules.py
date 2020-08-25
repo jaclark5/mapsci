@@ -705,9 +705,9 @@ def multipole_integral(sigma0, beadA, beadB, multipole_terms=None):
         multipole_terms = calc_cross_multipole_terms(beadA,beadB)
 
     if np.size(multipole_terms) == 4:
-        integral = -4*np.pi*np.array([sigma0**(-4), sigma0**(-6)/3, sigma0**(-8)/5, sigma0**(-10)/7])
+        integral = -4*np.pi*np.array([sigma0**(-1), sigma0**(-3)/3, sigma0**(-5)/5, sigma0**(-7)/7])
     elif np.size(multipole_terms) == 9:
-        integral = -4*np.pi*np.array([sigma0**(-4), sigma0**(-4), sigma0**(-6)/3, sigma0**(-6)/3, sigma0**(-6)/3, sigma0**(-6)/3, sigma0**(-8)/5, sigma0**(-8)/5, sigma0**(-10)/7])
+        integral = -4*np.pi*np.array([sigma0**(-1), sigma0**(-1), sigma0**(-3)/3, sigma0**(-3)/3, sigma0**(-3)/3, sigma0**(-3)/3, sigma0**(-5)/5, sigma0**(-5)/5, sigma0**(-7)/7])
     else:
         raise ValueError("Mulitpole terms input should be either of length 4 or length 9 for the supported interaction types.")
 
@@ -775,7 +775,8 @@ def solve_multipole_cross_interaction_integral(sigma0, beadA, beadB, multipole_t
 
     eps_min = eps_tmp/20
     eps_max = eps_tmp*2
-    epsilon = spo.brentq(obj_energy_parameter_from_integral,eps_min,eps_max,args=(beadA, beadB, beadAB, Cmultipole, sigma0, shape_factor_scale),xtol=1e-12) 
+
+    epsilon = spo.brentq(obj_energy_parameter_from_integral,eps_min,eps_max,args=(beadA, beadB, beadAB, Cmultipole, sigma0, shape_factor_scale),xtol=1e-12)
 
     # __ Remove these lines so that we would have an accurate representation of the contributions without the mie terms
     # __ Add these lines back in to be able to add the multipole terms to equal the energy parameter
