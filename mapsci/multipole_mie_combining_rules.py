@@ -588,7 +588,7 @@ def plot_multipole_potential(r, potential, potential_terms=None, show=True):
 def solve_polarizability_integral(sigma0, bead_dict0, shape_factor_scale=False):
 
     r"""
-    Calculation of nondimensionalized cross-interaction potential from multipole moments.
+    Calculation of nondimensionalized polarizability from multipole moments.
     
     Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`\emph{e}`.
     
@@ -664,6 +664,216 @@ def obj_polarizability_from_integral(polarizability, bead_dict, Cintegral, sigma
     Cmultipole, _ = multipole_integral(sigma0, dict_tmp, dict_tmp)
 
     return Cmultipole - Cintegral
+
+def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_bound="rmin"):
+
+    r"""
+    Calculate partial derivative with respect to multipole moments.
+    
+    Parameters
+    ----------
+    bead_dict : dict
+        Dictionary of multipole parameters for bead_A.
+
+        - epsilon (float) [K] Energy parameter scaled by Boltzmann constant
+        - sigma (float) [Angstroms] Size parameter
+        - l_r (float) Repulsive exponent
+        - l_a (float) Attractive exponent
+        - polarizability (float) [Anstroms^3] This quanity is used as a free parameter in mixing rule
+        - charge (float) [-] Charge of bead fragment in elementary charges
+        - dipole (float) [Debye] Dipole moment of bead fragment
+        - quadrupole (float) [Debye*Angstroms] Quadrupole moment of bead fragment
+        - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
+
+    temperature : float, Optional, default=298
+        Temperature of the system.
+    sigma0 : float, Optional, default=None
+        In angstroms, this lower bound of the integral dictates where the lower bound of the definate integral is
+    lower_bound : str, Optional, default='rmin'
+        Lower bound of distance array. Used only when sigma0 is None. Can be one of:
+
+        - rmin: the position of the potential well
+        - sigma: the size parameter
+    
+    Returns
+    -------
+    partial_dict : dict
+        Partial derivative with respect to multipole moments
+    """
+
+    if temperature is None:
+        temperature = 298
+        logger.info("Using default temperature of 298 K")
+
+    tmp = {"bead": bead_dict0.copy()}
+    bead_dict = dict_dimensions(tmp, temperature, dimensions=False)["bead"]
+
+    if sigma0 is None:
+        if lower_bound == "rmin":
+            rm = mie_potential_minimum(bead_dict)
+        elif lower_bound == "sigma":
+            rm = bead_dict["sigma"]
+    else:
+        rm = sigma0
+
+    a = -2/bead_dict['ionization_energy']*(bead_dict['charge']**2.*rm**2
+             + 2*bead_dict['dipole']**2/3 + 3*bead_dict['quadrupole']**2.0*rm**2)
+    b = 4/bead_dict['ionization_energy']**2*(bead_dict['charge']**4.*rm**4 + 4*bead_dict['charge']**2.*bead_dict['dipole']**2*rm**2/3
+            + 6*bead_dict['quadrupole']**2.*bead_dict['charge']**2./5 + 4/9*bead_dict['dipole']**4 
+            + 4/5*bead_dict['dipole']**2*bead_dict['quadrupole']**2.0/rm**2 + 9/25*bead_dict['quadrupole']**4.0/rm**4)
+    c = 4/bead_dict['ionization_energy']*(bead_dict['charge']**2.*bead_dict['dipole']**2*rm**2 + bead_dict['dipole']**4/3 
+            + bead_dict['quadrupole']**2.*bead_dict['charge']**2./5 + 3/5*bead_dict['quadrupole']**2.*bead_dict['dipole']**2./rm**2 
+            + 3/5*bead_dict['quadrupole']**4.0/rm**4 - prefactor(bead_dict['l_r'],bead_dict['l_a'])/(bead_dict['l_a']-3)*bead_dict['epsilon']*bead_dict['sigma']**bead_dict['l_a']/rm**(bead_dict['l_a']-6))
+
+    partial_dict = {}
+    for key in bead_dict0:
+        if key == "ionization_energy":
+            partial_dict[key] = -(a+np.sqrt(b-c))/bead_dict['ionization_energy']
+        elif key == "charge":
+            tmp1 = 4/bead_dict['ionization_energy']**2*(4*bead_dict['charge']**3*rm**4 
+                       + 8/3*bead_dict['charge']*bead_dict['dipole']**2*rm**2 + bead_dict['charge']*bead_dict['quadrupole']**2*12/5)
+            tmp2 = 8/bead_dict['ionization_energy']*(bead_dict['charge']*bead_dict['dipole']**2*rm**2 
+                       + bead_dict['charge']*bead_dict['quadrupole']**2/5)
+            partial_dict[key] = -4*bead_dict['charge']*rm**2/bead_dict['ionization_energy'] + (tmp1 - tmp2)/(2*np.sqrt(b-c))
+        elif key == "dipole":
+            tmp1 = 4/bead_dict['ionization_energy']**2*(8/3*bead_dict['charge']**2*rm**2*bead_dict['dipole'] 
+                       + 16/9*bead_dict['dipole']**3 + 8/5*bead_dict['dipole']*bead_dict['quadrupole']**2/rm**2)
+            tmp2 = 8/bead_dict['ionization_energy']*(bead_dict['charge']*bead_dict['dipole']**2*rm**2 
+                       + 4/3*bead_dict['dipole']**3 + 3/5*bead_dict['dipole']*bead_dict['quadrupole']**2/rm**2)
+            partial_dict[key] = -8/3*bead_dict['dipole']/bead_dict['ionization_energy'] + (tmp1 - tmp2)/(2*np.sqrt(b-c))
+        elif key == "quadrupole":
+            tmp1 = 4/bead_dict['ionization_energy']**2*(12/5*bead_dict['charge']**2*bead_dict['quadrupole']   
+                       + 8/5*bead_dict['dipole']**2*bead_dict['quadrupole']/rm**2 + 36/25*bead_dict['quadrupole']**3/rm**4)
+            tmp2 = 4/bead_dict['ionization_energy']*(2/5*bead_dict['charge']**2*bead_dict['quadrupole'] 
+                       + 6/5*bead_dict['dipole']**2*bead_dict['quadrupole']/rm**2 + 12/5*bead_dict['quadrupole']**3/rm**4)
+            partial_dict[key] = -12/5*bead_dict['quadrupole']/bead_dict['ionization_energy']/rm**2 + (tmp1 - tmp2)/(2*np.sqrt(b-c))
+
+    for key in partial_dict:
+        if key != "charge":
+            tmp = float_dimensions(partial_dict[key], key, temperature, dimensions=False)
+        else:
+            tmp = partial_dict[key]
+        partial_dict[key] = float_dimensions(tmp, "polarizability", temperature)
+
+    return partial_dict
+
+def partial_energy_parameter(beadA, beadB, temperature=None, shape_factor_scale=False, sigma0=None, lower_bound="rmin"):
+
+    r"""
+    Calculate partial derivative with respect to multipole moments.
+    
+    Parameters
+    ----------
+    beadA : dict
+        Dictionary of multipole parameters for bead_A.
+
+        - epsilon (float) [K] Energy parameter scaled by Boltzmann constant
+        - sigma (float) [Angstroms] Size parameter
+        - l_r (float) Repulsive exponent
+        - l_a (float) Attractive exponent
+        - polarizability (float) [Anstroms^3] This quanity is used as a free parameter in mixing rule
+        - charge (float) [-] Charge of bead fragment in elementary charges
+        - dipole (float) [Debye] Dipole moment of bead fragment
+        - quadrupole (float) [Debye*Angstroms] Quadrupole moment of bead fragment
+        - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
+
+    beadB : dict
+        Dictionary of multipole parameters for bead_B.
+
+        - epsilon (float) [K] Energy parameter scaled by Boltzmann constant
+        - sigma (float) [Angstroms] Size parameter
+        - l_r (float) Repulsive exponent
+        - l_a (float) Attractive exponent
+        - polarizability (float) [Anstroms^3] This quanity is used as a free parameter in mixing rule
+        - charge (float) [-] Charge of bead fragment in elementary charges
+        - dipole (float) [Debye] Dipole moment of bead fragment
+        - quadrupole (float) [Debye*Angstroms] Quadrupole moment of bead fragment
+        - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
+
+    temperature : float, Optional, default=298
+        Temperature of the system.
+    sigma0 : float, Optional, default=None
+        In angstroms, this lower bound of the integral dictates where the lower bound of the definate integral is
+    shape_factor_scale : bool, Optional, default: False
+        Scale energy parameter based on shape factor epsilon*Si*Sj
+    lower_bound : str, Optional, default='rmin'
+        Lower bound of distance array. Used only when sigma0 is None. Can be one of:
+
+        - rmin: the position of the potential well
+        - sigma: the size parameter
+    
+    Returns
+    -------
+    partial_dict : dict
+        Partial derivative with respect to multipole moments
+    """
+
+    if temperature is None:
+        temperature = 298
+        logger.info("Using default temperature of 298 K")
+
+    tmp = {"0": beadA.copy(), "1": beadB.copy()}
+    bead_dict = dict_dimensions(tmp, temperature, dimensions=False)
+
+    beadAB = mixed_parameters(bead_dict["0"],bead_dict["1"])
+    if sigma0 is None:
+        if lower_bound == "rmin":
+            rm = mie_potential_minimum(beadAB)
+        elif lower_bound == "sigma":
+            rm = beadAB["sigma"]
+    else:
+        rm = sigma0
+
+    for key1 in bead_dict:
+        if "polarizability" not in bead_dict[key1]:
+            r = calc_distance_array(bead_dict[key1])
+            pol_tmp = solve_polarizability_integral(r[0], bead_dict[key1], shape_factor_scale=shape_factor_scale)
+            if np.isnan(pol_tmp):
+                raise ValueError("Error: Bead {} cannot fit suitable polarizability. No value will allow the integrated multipole moment to match the integrated Mie potential".format(bead))
+            bead_dict[key1]["polarizability"] = pol_tmp
+
+    tmp = prefactor(beadAB["l_r"],beadAB["l_a"])/(beadAB["l_a"]-3)*beadAB["sigma"]**beadAB["l_a"]/rm**(beadAB["l_a"]-3)
+    if shape_factor_scale:
+        tmp = tmp*beadA["Sk"]*beadB["Sk"]
+
+    partial_dict = {"0": {}, "1": {}}
+    for i in [0,1]:
+        key1 = str(1*i)
+        key2 = str(1-i)
+
+        for key in bead_dict[key1]:
+            if key == "ionization_energy":
+                I = bead_dict[key2]['ionization_energy']**2/(bead_dict[key1]['ionization_energy']+bead_dict[key2]['ionization_energy'])**2
+                partial_dict[key1][key] = bead_dict[key1]['polarizability']*bead_dict[key2]['polarizability']/rm**3/2/tmp
+            elif key == "charge":
+                tmp1 = bead_dict[key1]['charge']/rm*(bead_dict[key2]['polarizability'] + bead_dict[key2]['dipole']**2)
+                tmp2 = bead_dict[key1]['charge']*bead_dict[key2]['quadrupole']**2/rm**3/10
+                partial_dict[key1][key] = (tmp1 + tmp2)/tmp
+            elif key == "dipole":
+                tmp1 = bead_dict[key2]['charge']**2*bead_dict[key1]['dipole']/rm
+                tmp2 = 2/3*bead_dict[key1]['dipole']/rm**3*(bead_dict[key2]['dipole']**2 + bead_dict[key2]['polarizability'])
+                tmp3 = 3/5/rm**5*bead_dict[key1]['dipole']*bead_dict[key2]['quadrupole']**2 
+                partial_dict[key1][key] = (tmp1+tmp2+tmp3)/tmp
+            elif key == "quadrupole":
+                tmp1 = bead_dict[key2]['charge']**2*bead_dict[key1]['quadrupole']/rm**3/5
+                tmp2 = 3/5*bead_dict[key1]['quadrupole']/rm**5*(bead_dict[key2]['dipole']**2 + bead_dict[key2]['polarizability'])
+                tmp3 = 6/5/rm**7*bead_dict[key1]['quadrupole']*bead_dict[key2]['quadrupole']**2
+                partial_dict[key1][key] = (tmp1+tmp2+tmp3)/tmp
+            elif key == "polarizability":
+                I = bead_dict[key1]['ionization_energy']*bead_dict[key2]['ionization_energy']/(bead_dict[key1]['ionization_energy']+bead_dict[key2]['ionization_energy'])
+                tmp1 = bead_dict[key2]['charge']**2/rm/2
+                tmp2 = 1/3/rm**3*(bead_dict[key2]['dipole']**2 + 3/2*bead_dict[key2]['polarizability']*I)
+                tmp3 = 3/10/rm**5*bead_dict[key2]['quadrupole']**2
+                partial_dict[key1][key] = (tmp1+tmp2+tmp3)/tmp
+
+        for key in partial_dict[key1]:
+            if key != "charge":
+                tmp1 = float_dimensions(partial_dict[key1][key], key, temperature, dimensions=False)
+            else:
+                tmp1 = partial_dict[key1][key]
+            partial_dict[key1][key] = float_dimensions(tmp1, "epsilon", temperature)
+
+    return partial_dict
 
 def multipole_integral(sigma0, beadA, beadB, multipole_terms=None):
     """
