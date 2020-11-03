@@ -1274,17 +1274,8 @@ def fit_multipole_cross_interaction_parameter(beadA,
     output_dict["kij_fit"] = 1 - output_dict["epsilon_fit"] / beadAB["epsilon"]
 
     output_dict["lambdaa_variance"] = var_matrix[0][0]
+    output_dict["K"] = K
     output_dict["K_variance"] = var_matrix[1][1]
-
-    # From analytical solution
-    beadC = {"epsilon": eps_fit, "lambdar": lambdar_fit, "lambdaa": lambdaa_fit, "sigma": beadAB["sigma"]}
-    _, terms = solve_multipole_cross_interaction_integral(r[0],
-                                                          beadA,
-                                                          beadB,
-                                                          multipole_terms=multipole_terms,
-                                                          shape_factor_scale=shape_factor_scale,
-                                                          beadAB=beadC)
-    output_dict["terms_int"] = terms
 
     return output_dict
 
@@ -1476,8 +1467,16 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
     -------
     cross_dict : dict
         Dictionary with "epsilon" value for cross interaction for the given beads.
-    summary : list[list]
-        For each pair contains list with two bead names, cross interaction and binary interaction parameters for the SAFT mixing rules, the cross interaction and binary interaction parameters with exponents for multipole curve fit, the polarizabilities for the two beads, and the integral terms for each multipole contribution from the lower limit to infinite.
+    summary : dict
+        Dictionary of bead types and details of their interactions with each of the other bead types. For each pair a dictionary entry is present for:
+
+        - epsilon_saft: cross interaction with SAFT combining rules
+        - kij_saft: binary interaction parameter for the energy parameter with SAFT combining rules
+        - epsilon: cross interaction from multipole curve fit
+        - kij: binary interaction parameter from multipole curve fit 
+        - lambdar: repulsive exponent from multipole curve fit
+        - lambdaa: attractive exponent from multipole curve fit
+        - polarizability_*: polarizabilities for the two beads
     """
 
     bead_library_new = dict_dimensions(bead_library.copy(), temperature, dimensions=False)
@@ -1494,11 +1493,12 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
 
     # Calculate cross interaction file
     dict_cross = {}
-    summary = []
+    dict_summary = {}
     beads = list(bead_library_new.keys())
     for i, bead1 in enumerate(beads):
         if len(beads[i + 1:]) > 0:
             dict_cross[bead1] = {}
+            dict_summary[bead1] = {}
             for bead2 in beads[i + 1:]:
                 if np.any(
                         np.isnan(
@@ -1523,14 +1523,20 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
                     "lambdar": cross_out["lambdar_fit"],
                     "lambdaa": cross_out["lambdaa_fit"]
                 }
-                summary.append([
-                    bead1, bead2, epsilon_saft, cross_out["kij_saft"], epsilon_fit, cross_out["kij_fit"],
-                    cross_out["lambdar_fit"], cross_out["lambdaa_fit"], pol_i, pol_j
-                ] + cross_out["terms_int"].tolist())
+                dict_summary[bead1][bead2] = {
+                    "epsilon_saft": epsilon_saft,
+                    "kij_saft":  cross_out["kij_saft"],
+                    "epsilon": epsilon_fit,
+                    "kij": cross_out["kij_fit"],
+                    "lambdar": cross_out["lambdar_fit"],
+                    "lambdaa": cross_out["lambdaa_fit"],
+                    "polarizability_"+bead1: pol_i,
+                    "polarizability_"+bead2: pol_j,
+                }
 
     dict_cross = dict_dimensions(dict_cross.copy(), temperature)
 
-    return dict_cross, summary
+    return dict_cross, dict_summary
 
 
 def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_scale=False, distance_dict={}):
@@ -1565,8 +1571,16 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
     -------
     cross_dict : dict
         Dictionary with "epsilon" value for cross interaction for the given beads.
-    summary : list[list]
-        For each pair contains list with two bead names, cross interaction and binary interaction parameters for the SAFT mixing rules, the cross interaction and binary interaction parameters with exponents for multipole analytical calculation (exponents use saft mixing), the polarizability for the two beads, the potential coefficients for the multipole moment, and finally the integral terms.
+    summary : dict
+        Dictionary of bead types and details of their interactions with each of the other bead types. For each pair a dictionary entry is present for:
+
+        - epsilon_saft: cross interaction with SAFT combining rules
+        - kij_saft: binary interaction parameter for the energy parameter with SAFT combining rules
+        - epsilon: cross interaction from multipole analytical solution
+        - kij: binary interaction parameter from multipole analytical solution
+        - lambdar: repulsive exponent from SAFT combining rules
+        - lambdaa: attractive exponent from SAFT combining rules
+        - polarizability_*: polarizabilities for the two beads
     """
 
     bead_library_new = dict_dimensions(bead_library.copy(), temperature, dimensions=False)
@@ -1582,12 +1596,13 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
 
     # Calculate cross interaction file
     dict_cross = {}
-    summary = []
+    dict_summary = {}
     beads = list(bead_library_new.keys())
     for i, bead1 in enumerate(beads):
         beadA = bead_library_new[bead1]
         if len(beads[i + 1:]) > 0:
             dict_cross[bead1] = {}
+            dict_summary[bead1] = {}
             for bead2 in beads[i + 1:]:
                 beadB = bead_library_new[bead2]
                 if np.any(np.isnan([beadA["polarizability"], beadB["polarizability"]])):
@@ -1608,16 +1623,23 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
                 epsilon_analytical = float_dimensions(epsilon_tmp, "epsilon", temperature)
                 kij_saft = 1 - eps_saft_tmp / beadAB["epsilon"]
                 kij_analytical = 1 - epsilon_tmp / beadAB["epsilon"]
-                summary.append([
-                    bead1, bead2, epsilon_saft, kij_saft, epsilon_analytical, kij_analytical, beadAB["lambdar"],
-                    beadAB["lambdaa"], pol_i, pol_j
-                ] + terms.tolist())
 
                 dict_cross[bead1][bead2] = {"epsilon": epsilon_tmp}
 
+                dict_summary[bead1][bead2] = {
+                    "epsilon_saft": epsilon_saft,
+                    "kij_saft":  kij_saft,
+                    "epsilon": epsilon_analytical,
+                    "kij": kij_analytical,
+                    "lambdar": beadAB["lambdar"],
+                    "lambdaa": beadAB["lambdaa"],
+                    "polarizability_{}".format(bead1): pol_i,
+                    "polarizability_{}".format(bead2): pol_j,
+                }
+
     dict_cross = dict_dimensions(dict_cross.copy(), temperature)
 
-    return dict_cross, summary
+    return dict_cross, dict_summary
 
 
 def dict_dimensions(parameters, temperature, dimensions=True, conv_custom={}):
