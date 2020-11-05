@@ -9,6 +9,8 @@ import numpy as np
 import scipy.optimize as spo
 import logging
 
+from mapsci import quick_plots as qp
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +43,7 @@ def calc_distance_array(bead_dict, tol=0.01, max_factor=2, lower_bound="rmin"):
     Returns
     -------
     r : numpy.ndarray
-        Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        Array (or float) in angstroms or nondimensionalized, distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     """
 
     if lower_bound == "rmin":
@@ -54,7 +56,6 @@ def calc_distance_array(bead_dict, tol=0.01, max_factor=2, lower_bound="rmin"):
     r_array = np.linspace(rm, max_factor * rm, num=10000)
 
     return r_array
-
 
 def mie_potential_minimum(bead_dict):
     r"""
@@ -86,16 +87,16 @@ def mixed_parameters(bead1, bead2):
     beadA : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
 
     beadB : dict
         Dictionary of multipole parameters for bead_B.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
 
@@ -104,8 +105,8 @@ def mixed_parameters(bead1, bead2):
     beadAB : dict
         Dictionary of multipole parameters for bead_B.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
     """
@@ -123,17 +124,15 @@ def calc_mie_attractive_potential(r, bead_dict):
     r"""
     Calculation of nondimensionalized Mie potential.
     
-    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
-    
     Parameters
     ----------
     r : numpy.ndarray
-        Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        Array (or float) in either angstroms or nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`, whatever is consistent with 'bead_dict'
     bead_dict : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
@@ -169,8 +168,8 @@ def calc_lambdaij_from_epsilonij(epsij, bead1, bead2):
     beadA : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
@@ -178,8 +177,8 @@ def calc_lambdaij_from_epsilonij(epsij, bead1, bead2):
     beadB : dict
         Dictionary of multipole parameters for bead_B.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
@@ -200,10 +199,9 @@ def calc_lambdaij_from_epsilonij(epsij, bead1, bead2):
 
     return lamr_ij, lama_ij
 
-
 def calc_epsilonij_from_lambda_aij(lambda_a, bead1, bead2):
     r"""
-    Calculate cross-interaction exponents from cross interaction energy parameter
+    Calculate cross-interaction energy parameter from self-interaction parameters and cross-interaction attractive exponent using from scaling with vdW attraction parameter
 
     Parameters
     ----------
@@ -212,8 +210,8 @@ def calc_epsilonij_from_lambda_aij(lambda_a, bead1, bead2):
     beadA : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
@@ -221,18 +219,16 @@ def calc_epsilonij_from_lambda_aij(lambda_a, bead1, bead2):
     beadB : dict
         Dictionary of multipole parameters for bead_B.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
 
     Returns
     -------
-    lambdar_new : float
-        Repulsive exponent
-    lambdaa_new : float
-        Attractive exponent 
+    epsilon_ij : float
+        Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
     """
 
     tmp_sigma = np.sqrt(bead1["sigma"]**3 * bead2["sigma"]**3) / np.mean([bead1["sigma"], bead2["sigma"]])**3
@@ -266,27 +262,29 @@ def calc_lambdarij_from_lambda_aij(lambda_a, alpha_mie):
 
     return lambda_r
 
-
-def calc_self_multipole_potential(r, polarizability, *, charge, dipole, quadrupole, ionization_energy):
+def calc_self_multipole_potential(r, polarizability, bead_dict, temperature=None, nondimensional=False):
     r"""
     Calculation of nondimensionalized self-interaction potential using extended multipole expression.
 
-    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
-    
     Parameters
     ----------
     r : numpy.ndarray
         Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     polarizability : float
-        Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
-    charge : float
-        Nondimensionalized charge of bead. :math:`q'=q/e`
-    dipole : float
-        Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-    quadrupole : float
-        Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-    ionization_energy : float
-        Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+    bead_dict : dict
+        Dictionary of multipole parameters. Those parameters may be:
+        
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Nondimensionalize polarizability of bead in [angstroms^3]. math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
 
     Returns
     -------
@@ -295,27 +293,121 @@ def calc_self_multipole_potential(r, polarizability, *, charge, dipole, quadrupo
 
     """
 
-    t11 = -charge**2 * dipole**2
-    t12 = -charge**2
+    bead_dict["polarizability"] = polarizability
 
-    t21 = -3 * ionization_energy / 4
-    t22 = -2 * dipole**2
-    t23 = -dipole**4 - 3 * quadrupole**2 * charge**2 / 5
+    if not nondimensional:
+        if temperature == None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        bead_dict_new = dict_dimensions(bead_dict.copy(), temperature, dimensions=False)
+        r = float_dimensions(r,"sigma",temperature,dimensions=False)
+    else:
+        bead_dict_new = bead_dict.copy()
 
-    t31 = -3 * dipole**2 * quadrupole**2
-    t32 = -3 * quadrupole**2
+    t11 = -bead_dict_new["charge"]**2 * bead_dict_new["dipole"]**2
+    t12 = -bead_dict_new["charge"]**2
 
-    t41 = -21 / 5 * quadrupole**4
+    t21 = -3 * bead_dict_new["ionization_energy"] / 4
+    t22 = -2 * bead_dict_new["dipole"]**2
+    t23 = -bead_dict_new["dipole"]**4 - 3 * bead_dict_new["quadrupole"]**2 * bead_dict_new["charge"]**2 / 5
 
-    potential = (t11 + polarizability*t12)/r**4 \
-              + (t21*polarizability**2 + t22*polarizability + t23)/r**6 \
-              + (t31 + polarizability*t32)/r**8 \
+    t31 = -3 * bead_dict_new["dipole"]**2 * bead_dict_new["quadrupole"]**2
+    t32 = -3 * bead_dict_new["quadrupole"]**2
+
+    t41 = -21 / 5 * bead_dict_new["quadrupole"]**4
+
+    potential = (t11 + bead_dict_new["polarizability"]*t12)/r**4 \
+              + (t21*bead_dict_new["polarizability"]**2 + t22*bead_dict_new["polarizability"] + t23)/r**6 \
+              + (t31 + bead_dict_new["polarizability"]*t32)/r**8 \
               + t41/r**10
+
+    if not nondimensional:
+        potential = float_dimensions(potential,"epsilon",temperature,dimensions=True)
 
     return potential
 
+def calc_polarizability(bead_library, temperature=None, distance_opts={}, calculation_method="fit", polarizability_opts={}, nondimensional=False):
+    r"""
+    Calculation of array for nondimensionalized distance array.
+    
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+    
+    Parameters
+    ----------
+    bead_library : dict
+        Dictionary of beads and their dictionaries of multipole parameters. Those parameters may be:
+        
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
+        - lambdar (float) Repulsive exponent
+        - lambdaa (float) Attractive exponent
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
 
-def fit_polarizability(r, bead_dict, tol=0.05, shape_factor_scale=False, plot_fit=False):
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+e isn't used.
+    distance_opts : dict, Optional, default={}
+        Dictionary of keyword arguements for :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+    calculation_method : str, Optional, default="fit"
+        Method of calulating the polarizability, either 'fit' or 'analytical'
+    polarizability_opts : dict, Optional, default={}
+        Dictionary of keyword arguements for :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.solve_polarizability_integral`
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+    
+    Returns
+    -------
+    bead_library : dict
+        Dictionary of beads and their dictionaries of multipole parameters. The following parameter is added to the original dictionary:
+
+        - polarizability (float) Nondimensionalize polarizability of bead in [angstroms^3]. math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+
+    """
+
+    if not nondimensional:
+        if temperature == None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        bead_library_new = dict_dimensions(bead_library.copy(), temperature, dimensions=False)
+    else:
+        bead_library_new = bead_library.copy()
+
+    tmp = [False if type(value)==dict else True for _,value in bead_library_new.items()]
+    if np.all(tmp):
+        bead_library_new = {"tmp": bead_library_new}
+        flag = True
+    elif np.any(tmp):
+        raise ValueError("Dictionary should be either a single beads parameters, or a dicitonary of dictionaries containing the parameters of several beads.")
+    else:
+        flag = False
+
+    for i, bead in enumerate(bead_library_new.keys()):
+        if "polarizability" in bead_library_new[bead]:
+            logger.info("Using given polarizability value for bead, {}".format(bead))
+        r = calc_distance_array(bead_library_new[bead], **distance_opts)
+
+        if calculation_method == "fit":
+            pol_tmp, var = fit_polarizability(r, bead_library_new[bead], **polarizability_opts, nondimensional=True)
+        elif calculation_method == "analytical":
+            pol_tmp = solve_polarizability_integral(r[0], bead_library_new[bead], **polarizability_opts, nondimensional=True)
+        else:
+            raise ValueError("Given, {}, is not a valid calculation method, choose 'fit' or 'analytical'".format(calculation_method))
+
+        if np.isnan(pol_tmp):
+            raise ValueError("Error: Bead {} cannot fit suitable polarizability. Attractive exponent is most likely not suitable given the bead partial charges.")
+        bead_library_new[bead]["polarizability"] = pol_tmp
+
+    if not nondimensional:
+        bead_library_new = dict_dimensions(bead_library_new, temperature, dimensions=True)
+
+    if flag:
+        bead_library_new = bead_library_new["tmp"]
+
+    return bead_library_new
+
+
+def fit_polarizability(r, bead_dict, temperature=None, nondimensional=False, tol=0.05, shape_factor_scale=False, plot_fit=False):
     r"""
     Calculation of nondimensionalized polarizability by fitting the sum of multipole potentials to attractive term of Mie potential.
     
@@ -328,15 +420,19 @@ def fit_polarizability(r, bead_dict, tol=0.05, shape_factor_scale=False, plot_fi
     bead_dict : dict
         Dictionary of multipole parameters.
         
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - charge (float) Nondimensionalized charge of bead. :math:`q'=q/e`
-        - dipole (float) Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-        - quadrupole (float) Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-        - ionization_energy (float) Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
 
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
     tol : float, Optional, default: 0.01
         Ratio of variance over polarizability value from curve-fit
     shape_factor_scale : bool, Optional, default: False
@@ -347,23 +443,29 @@ def fit_polarizability(r, bead_dict, tol=0.05, shape_factor_scale=False, plot_fi
     Returns
     -------
     Polarizability : float
-        Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
+        Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+    standard_dev : float
+        One standard deviation error for polarizability
     """
 
-    bead_dict_new = bead_dict.copy()
+    if not nondimensional:
+        if temperature == None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        bead_dict_new = dict_dimensions(bead_dict.copy(), temperature, dimensions=False)
+    else:
+        bead_dict_new = bead_dict.copy()
+
     if shape_factor_scale and "Sk" in bead_dict_new:
         bead_dict_new["epsilon"] = bead_dict_new["epsilon"] * bead_dict_new["Sk"]**2
-
+    
     w_mie = calc_mie_attractive_potential(r, bead_dict_new)
 
     p0 = [1.e-6]
     pol_tmp, var_matrix = spo.curve_fit(
         lambda x, a: calc_self_multipole_potential(x,
                                                    a,
-                                                   charge=bead_dict_new["charge"],
-                                                   dipole=bead_dict_new["dipole"],
-                                                   quadrupole=bead_dict_new["quadrupole"],
-                                                   ionization_energy=bead_dict_new["ionization_energy"]),
+                                                   bead_dict_new,
+                                                   nondimensional=True),
         r,
         w_mie,
         p0=p0,
@@ -372,8 +474,14 @@ def fit_polarizability(r, bead_dict, tol=0.05, shape_factor_scale=False, plot_fi
     if np.diag(var_matrix) / pol_tmp > tol:
         _ = test_polarizability(pol_tmp, bead_dict_new, r, plot_fit=plot_fit)
 
-    return pol_tmp[0], var_matrix[0][0]
+    polarizability = pol_tmp[0]
+    pol_variance = var_matrix[0][0]
 
+    if not nondimensional:
+        polarizability = float_dimensions(polarizability,"polarizability",temperature,dimensions=True)
+        pol_variance = float_dimensions(pol_variance,"polarizability",temperature,dimensions=True)
+
+    return polarizability, pol_variance
 
 def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
     r"""
@@ -411,38 +519,98 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
     bead_dict_new = bead_dict.copy()
 
     bead_dict_new["polarizability"] = polarizability
-    output = fit_multipole_cross_interaction_parameter(bead_dict_new, bead_dict_new, distance_array=r)
+    output = fit_multipole_cross_interaction_parameter(bead_dict_new, bead_dict_new, distance_array=r, nondimensional=True)
 
     logger.info(
         "Refitting attractive exponent with estimated polarizability of {} yields: lamba_a {}, epsilon {}".format(
-            bead_dict_new["polarizability"], output["lambdaa_fit"], output["epsilon_fit"]))
+            bead_dict_new["polarizability"], output["lambdaa"], output["epsilon"]))
 
     if plot_fit:
-        try:
-            import matplotlib.pyplot as plt
-        except:
-            logger.error("Package matplotlib is not available")
-            plot_fit = False
-        if plot_fit:
-            w_mie = calc_mie_attractive_potential(r, bead_dict_new)
-            bead_dict_plot = bead_dict_new.copy()
-            bead_dict_plot.update({"epsilon": output["epsilon_fit"], "lambdaa": output["lambdaa_fit"]})
-            w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot)
-            plt.figure(1)
-            plt.plot(r, w_mie, "--k", label="Mie")
-            plt.plot(r, w_mie_fit, "--r", label="Mie fit")
-            multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new)
-            logger.debug(
-                "charge-dipole, charge-induced_dipole, induced_dipole-induced_dipole, dipole-dipole, dipole-induced_dipole, charge-quadrupole, dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole"
-            )
-            logger.debug(multipole_terms, "\n\n")
-            potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
-            plot_multipole_potential(r, potential, potential_terms=potential_terms)
+        w_mie = calc_mie_attractive_potential(r, bead_dict_new)
+        plot_opts = {"label":"Mie", "color": "k", "linestyle": "--"}
+        qp.plot_potential(r, w_mie, plot_opts=plot_opts, show=False)
 
-    return output["epsilon_fit"]
+        bead_dict_plot = bead_dict_new.copy()
+        bead_dict_plot.update({"epsilon": output["epsilon"], "lambdaa": output["lambdaa"]})
+        w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot)
+        plot_opts = {"label":"Mie fit", "color": "r", "linestyle": "--"}
+        qp.plot_potential(r, w_mie_fit, plot_opts=plot_opts, show=False)
+
+        multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new, nondimensional=True)
+        tmp = ["charge-dipole", "charge-induced_dipole", "induced_dipole-induced_dipole", "dipole-dipole", "dipole-induced_dipole", "charge-quadrupole", "dipole-quadrupole", "induced_dipole-quadrupole", "quadrupole-quadrupole"]
+        logger.debug(("{}: {{{}}}\n"*len(tmp)).format(*[val for val in tmp for _ in range(2)]).format(**dict(zip(tmp,A)))) 
+
+        potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
+        qp.plot_multipole_potential(r, potential, potential_terms=potential_terms)
+
+    return output["epsilon"]
+
+def solve_polarizability_integral(sigma0, bead_dict0, shape_factor_scale=False, temperature=None, nondimensional=False):
+    r"""
+    Calculation of nondimensionalized polarizability from multipole moments using integral method.
+    
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+    
+    Parameters
+    ----------
+    sigma0 : float
+        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+    bead_dict : dict
+        Dictionary of multipole parameters for bead_A.
+
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
+        - lambdar (float) Repulsive exponent
+        - lambdaa (float) Attractive exponent
+        - Sk (float) Shape factor
+
+    shape_factor_scale : bool, Optional, default: False
+        Scale energy parameter based on shape factor epsilon*Si*Sj
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+    
+    Returns
+    -------
+    polarizability : float
+        Polarizability calculated from Mie and multipole potentials, integrated over all space. Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+    """
+
+    if not nondimensional:
+        if temperature == None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        bead_dict = dict_dimensions(bead_dict0.copy(), temperature, dimensions=False)
+        sigma0 = float_dimensions(sigma0,"sigma",temperature,dimensions=False)
+    else:
+        bead_dict = bead_dict0.copy()
+
+    if shape_factor_scale:
+        if "Sk" in bead_dict:
+            bead_dict["epsilon"] = bead_dict["epsilon"] * bead_dict["Sk"]**2
+        else:
+            raise ValueError("Shape factor was not provided in bead dictionary")
 
 
-def calc_cross_multipole_terms(beadA, beadB):
+    Cmie_int = mie_integral(bead_dict, sigma0=sigma0)
+
+    tmp1 = _obj_polarizability_from_integral(np.finfo("float").eps, bead_dict, Cmie_int, sigma0)
+    tmp2 = _obj_polarizability_from_integral(1, bead_dict, Cmie_int, sigma0)
+    if tmp1 * tmp2 < 0:
+        polarizability = spo.brentq(_obj_polarizability_from_integral,
+                                    np.finfo("float").eps,
+                                    1,
+                                    args=(bead_dict, Cmie_int, sigma0),
+                                    xtol=1e-12)
+    else:
+        polarizability = np.nan
+
+    if not nondimensional and not np.isnan(polarizability):
+        polarizability = float_dimensions(polarizability,"polarizability",temperature,dimensions=True)
+
+    return polarizability
+
+def calc_cross_multipole_terms(bead1, bead2, temperature=None, nondimensional=False):
     r"""
     Calculation of terms for nondimensionalized cross-interaction potential from multipole moments.
 
@@ -450,29 +618,44 @@ def calc_cross_multipole_terms(beadA, beadB):
     
     Parameters
     ----------
-    beadA : dict
+    bead1 : dict
         Dictionary of multipole parameters for bead_A.
 
-        - polarizability (float) Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
-        - charge (float) Nondimensionalized charge of bead. :math:`q'=q/e`
-        - dipole (float) Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-        - quadrupole (float) Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-        - ionization_energy (float) Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
-    beadB : dict
+    bead2 : dict
         Dictionary of multipole parameters for bead_B.
 
-        - polarizability (float) Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
-        - charge (float) Nondimensionalized charge of bead. :math:`q'=q/e`
-        - dipole (float) Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-        - quadrupole (float) Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-        - ionization_energy (float) Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
 
     Returns
     -------
     multipole_terms : numpy.ndarray
         This list of nine terms terms corresponds to the coefficients the various multipole interactions: charge-dipole, charge-induced_dipole, induced_dipole-induced_dipole, dipole-dipole, dipole-induced_dipole, charge-quadrupole, dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole
+        Note: This are ALWAYS nondimensionalized
     """
+
+    if not nondimensional:
+        if temperature == None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        beadA = dict_dimensions(bead1.copy(), temperature, dimensions=False)
+        beadB = dict_dimensions(bead2.copy(), temperature, dimensions=False)
+    else:
+        beadA = bead1.copy()
+        beadB = bead2.copy()
 
     t11 = (beadA['charge']**2. * beadB['dipole']**2 + beadB['charge']**2. * beadA['dipole']**2.) / 2.0
     t12 = (beadA['charge']**2. * beadB['polarizability'] + beadB['charge']**2. * beadA['polarizability']) / 2.0
@@ -567,113 +750,6 @@ def calc_cross_multipole_potential(r, multipole_terms, total_only=True):
     else:
         return potential, potential_terms
 
-
-def plot_multipole_potential(r, potential, potential_terms=None, show=True):
-    r"""
-    Plot multipole potential and each contribution (if provided).
-    
-    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
-    
-    Parameters
-    ----------
-    r : numpy.ndarray
-        Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
-    potential : numpy.ndarray
-        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)`
-    multipole_terms : numpy.ndarray
-        This can be either a list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions.
-    """
-
-    try:
-        import matplotlib.pyplot as plt
-        plot_fit = True
-    except:
-        logger.error("Package matplotlib is not available")
-        plot_fit = False
-
-    if plot_fit:
-        plt.figure(1, figsize=(4, 4))
-        plt.xlabel("Dimensionless Distance")
-        plt.ylabel("Dimensionless Potential")
-
-        plt.plot(r, potential, label="Total")
-        if potential_terms is not None:
-            if np.shape(potential_terms)[0] == 4:
-                plt.plot(r, potential_terms[0], label="O(-4)")
-                plt.plot(r, potential_terms[1], label="O(-6)")
-                plt.plot(r, potential_terms[2], label="O(-8)")
-                plt.plot(r, potential_terms[3], label="O(-10)")
-            elif np.shape(potential_terms)[0] == 9:
-                # dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole
-                plt.plot(r, potential_terms[0], label=r"$q-\mu$")
-                plt.plot(r, potential_terms[1], label=r"$q-\mu_{induced}$")
-                plt.plot(r, potential_terms[2], label=r"$\mu_{induced}-\mu_{induced}$")
-                plt.plot(r, potential_terms[3], label=r"$\mu-\mu$")
-                plt.plot(r, potential_terms[4], label=r"$\mu-\mu_{induced}$")
-                plt.plot(r, potential_terms[5], label=r"$q-Q$")
-                plt.plot(r, potential_terms[6], label=r"$\mu-Q$")
-                plt.plot(r, potential_terms[7], label=r"$\mu_{induced}-Q$")
-                plt.plot(r, potential_terms[8], label=r"$Q-Q$")
-            else:
-                raise ValueError(
-                    "Multipole terms input should be either of length 4 or length 9 for the supported interaction types.")
-            plt.legend(loc="best")
-
-        plt.tight_layout()
-        if show:
-            plt.show()
-
-
-def solve_polarizability_integral(sigma0, bead_dict0, shape_factor_scale=False):
-    r"""
-    Calculation of nondimensionalized polarizability from multipole moments using integral method.
-    
-    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
-    
-    Parameters
-    ----------
-    sigma0 : float
-        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
-    bead_dict : dict
-        Dictionary of multipole parameters for bead_A.
-
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
-        - lambdar (float) Repulsive exponent
-        - lambdaa (float) Attractive exponent
-        - Sk (float) Shape factor
-
-    shape_factor_scale : bool, Optional, default: False
-        Scale energy parameter based on shape factor epsilon*Si*Sj
-    
-    Returns
-    -------
-    polarizability : float
-        Polarizability calculated from Mie and multipole potentials, integrated over all space
-    """
-
-    bead_dict = bead_dict0.copy()
-    if shape_factor_scale:
-        if "Sk" in bead_dict:
-            bead_dict["epsilon"] = bead_dict["epsilon"] * bead_dict["Sk"]**2
-        else:
-            raise ValueError("Shape factor was not provided in bead dictionary")
-    Cmie_int = mie_integral(sigma0, bead_dict)
-
-    tmp1 = _obj_polarizability_from_integral(np.finfo("float").eps, bead_dict, Cmie_int, sigma0)
-    tmp2 = _obj_polarizability_from_integral(1, bead_dict, Cmie_int, sigma0)
-    if tmp1 * tmp2 < 0:
-        polarizability = spo.brentq(_obj_polarizability_from_integral,
-                                    np.finfo("float").eps,
-                                    1,
-                                    args=(bead_dict, Cmie_int, sigma0),
-                                    xtol=1e-12)
-    else:
-        polarizability = np.nan
-
-    return polarizability
-
-
 def _obj_polarizability_from_integral(polarizability, bead_dict, Cintegral, sigma0):
     r"""
     Objective function used to determine the polarizability from multipole and Mie integrals from some minimum to infinity
@@ -694,7 +770,7 @@ def _obj_polarizability_from_integral(polarizability, bead_dict, Cintegral, sigm
     Cintegral : float
         This sum of the multipole integrals is set equal to the attractive term of the integrated Mie potential to determine the energy parameter.
     sigma0 : float
-        Nondimensionalized value of the lower bound of the integral
+        Lower bound of the integral, can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
 
     Returns
     -------
@@ -705,12 +781,12 @@ def _obj_polarizability_from_integral(polarizability, bead_dict, Cintegral, sigm
     dict_tmp = bead_dict.copy()
     dict_tmp["polarizability"] = polarizability
 
-    Cmultipole, _ = multipole_integral(sigma0, dict_tmp, dict_tmp)
+    Cmultipole, _ = multipole_integral(dict_tmp, dict_tmp, sigma0=sigma0, nondimensional=True)
 
     return Cmultipole - Cintegral
 
 
-def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_bound="rmin"):
+def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_bound="rmin", nondimensional=False):
     r"""
     Calculate partial derivative with respect to multipole moments.
     
@@ -719,25 +795,28 @@ def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_boun
     bead_dict : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) [K] Energy parameter scaled by Boltzmann constant
-        - sigma (float) [Angstroms] Size parameter
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) [Angstroms^3] This quantity is used as a free parameter in mixing rule
-        - charge (float) [-] Charge of bead fragment in elementary charges
-        - dipole (float) [Debye] Dipole moment of bead fragment
-        - quadrupole (float) [Debye*Angstroms] Quadrupole moment of bead fragment
-        - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     temperature : float, Optional, default=298
-        Temperature of the system.
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
     sigma0 : float, Optional, default=None
-        In angstroms, this lower bound of the integral dictates where the lower bound of the definite integral is
+        This lower bound of the integral dictates where the lower bound of the definite integral is. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     lower_bound : str, Optional, default='rmin'
         Lower bound of distance array. Used only when sigma0 is None. Can be one of:
 
         - rmin: the position of the potential well
         - sigma: the size parameter
+
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
     
     Returns
     -------
@@ -745,12 +824,13 @@ def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_boun
         Partial derivative with respect to multipole moments
     """
 
-    if temperature is None:
-        temperature = 298
-        logger.info("Using default temperature of 298 K")
-
-    tmp = {"bead": bead_dict0.copy()}
-    bead_dict = dict_dimensions(tmp, temperature, dimensions=False)["bead"]
+    if not nondimensional:
+        if temperature is None:
+            temperature = 298
+            logger.info("Using default temperature of 298 K")
+            bead_dict = dict_dimensions(bead_dict0.copy(), temperature, dimensions=False)
+    else:
+        bead_dict = bead_dict0.copy()
 
     if sigma0 is None:
         if lower_bound == "rmin":
@@ -758,7 +838,7 @@ def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_boun
         elif lower_bound == "sigma":
             rm = bead_dict["sigma"]
     else:
-        rm = sigma0
+        rm = float_dimensions(sigma0,"sigma",temperature,dimensions=False)
 
     a = -2 / bead_dict['ionization_energy'] * (bead_dict['charge']**2. * rm**2 + 2 * bead_dict['dipole']**2 / 3 +
                                                3 * bead_dict['quadrupole']**2.0 * rm**2)
@@ -805,12 +885,13 @@ def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_boun
             partial_dict[key] = -12 / 5 * bead_dict['quadrupole'] / bead_dict['ionization_energy'] / rm**2 + (
                 tmp1 - tmp2) / (2 * np.sqrt(b - c))
 
-    for key in partial_dict:
-        if key != "charge":
-            tmp = float_dimensions(partial_dict[key], key, temperature, dimensions=False)
-        else:
-            tmp = partial_dict[key]
-        partial_dict[key] = float_dimensions(tmp, "polarizability", temperature)
+    if not nondimensional:
+        for key in partial_dict:
+            if key != "charge":
+                tmp = float_dimensions(partial_dict[key], key, temperature, dimensions=True)
+            else:
+                tmp = partial_dict[key]
+            partial_dict[key] = float_dimensions(tmp, "polarizability", temperature)
 
     return partial_dict
 
@@ -818,9 +899,10 @@ def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_boun
 def partial_energy_parameter(beadA,
                              beadB,
                              temperature=None,
+                             distance_opts={},
+                             polarizability_opts={},
                              shape_factor_scale=False,
-                             sigma0=None,
-                             lower_bound="rmin"):
+                             sigma0=None):
     r"""
     Calculate partial derivative with respect to multipole moments.
     
@@ -829,40 +911,37 @@ def partial_energy_parameter(beadA,
     beadA : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) [K] Energy parameter scaled by Boltzmann constant
-        - sigma (float) [Angstroms] Size parameter
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) [Angstroms^3] This quantity is used as a free parameter in mixing rule
-        - charge (float) [-] Charge of bead fragment in elementary charges
-        - dipole (float) [Debye] Dipole moment of bead fragment
-        - quadrupole (float) [Debye*Angstroms] Quadrupole moment of bead fragment
-        - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     beadB : dict
         Dictionary of multipole parameters for bead_B.
 
-        - epsilon (float) [K] Energy parameter scaled by Boltzmann constant
-        - sigma (float) [Angstroms] Size parameter
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) [Angstroms^3] This quantity is used as a free parameter in mixing rule
-        - charge (float) [-] Charge of bead fragment in elementary charges
-        - dipole (float) [Debye] Dipole moment of bead fragment
-        - quadrupole (float) [Debye*Angstroms] Quadrupole moment of bead fragment
-        - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     temperature : float, Optional, default=298
-        Temperature of the system.
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
     sigma0 : float, Optional, default=None
-        In angstroms, this lower bound of the integral dictates where the lower bound of the definite integral is
+        This lower bound of the integral dictates where the lower bound of the definite integral is. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
-    lower_bound : str, Optional, default='rmin'
-        Lower bound of distance array. Used only when sigma0 is None. Can be one of:
-
-        - rmin: the position of the potential well
-        - sigma: the size parameter
+    polarizability_opts : dict, Optional, default={}
+        Dictionary of keyword arguements used in :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`
     
     Returns
     -------
@@ -870,34 +949,34 @@ def partial_energy_parameter(beadA,
         Partial derivative with respect to multipole moments
     """
 
-    if temperature is None:
-        temperature = 298
-        logger.info("Using default temperature of 298 K")
+    if not nondimensional:
+        if temperature is None:
+            temperature = 298
+            logger.info("Using default temperature of 298 K")
+        bead1 = dict_dimensions(beadA.copy(), temperature, dimensions=False)
+        bead2 = dict_dimensions(beadB.copy(), temperature, dimensions=False)
 
-    tmp = {"0": beadA.copy(), "1": beadB.copy()}
-    bead_dict = dict_dimensions(tmp, temperature, dimensions=False)
+    bead_dict = {"0": beadA.copy(), "1": beadB.copy()}
+    polarizability_opts.update({"shape_factor_scale":shape_factor_scale})
+    bead_dict = calc_polarizability(bead_dict,
+                                    distance_opts=distance_opts,
+                                    calculation_method="analytical",
+                                    polarizability_opts=polarizability_opts,
+                                    nondimensional=True)
 
-    beadAB = mixed_parameters(bead_dict["0"], bead_dict["1"])
+    beadAB = mixed_parameters(bead1, bead2)
+
     if sigma0 is None:
         if lower_bound == "rmin":
             rm = mie_potential_minimum(beadAB)
         elif lower_bound == "sigma":
             rm = beadAB["sigma"]
     else:
-        rm = sigma0
-
-    for key1 in bead_dict:
-        if "polarizability" not in bead_dict[key1]:
-            r = calc_distance_array(bead_dict[key1])
-            pol_tmp = solve_polarizability_integral(r[0], bead_dict[key1], shape_factor_scale=shape_factor_scale)
-            if np.isnan(pol_tmp):
-                raise ValueError(
-                    "Error: Bead {} cannot fit suitable polarizability. No value will allow the integrated multipole moment to match the integrated Mie potential"
-                    .format(bead))
-            bead_dict[key1]["polarizability"] = pol_tmp
+        rm = float_dimensions(sigma0,"sigma",temperature,dimensions=False)
 
     tmp = prefactor(beadAB["lambdar"],
                     beadAB["lambdaa"]) / (beadAB["lambdaa"] - 3) * beadAB["sigma"]**beadAB["lambdaa"] / rm**(beadAB["lambdaa"] - 3)
+
     if shape_factor_scale:
         tmp = tmp * beadA["Sk"] * beadB["Sk"]
 
@@ -937,29 +1016,30 @@ def partial_energy_parameter(beadA,
                 tmp3 = 3 / 10 / rm**5 * bead_dict[key2]['quadrupole']**2
                 partial_dict[key1][key] = (tmp1 + tmp2 + tmp3) / tmp
 
-        for key in partial_dict[key1]:
-            if key != "charge":
-                tmp1 = float_dimensions(partial_dict[key1][key], key, temperature, dimensions=False)
-            else:
-                tmp1 = partial_dict[key1][key]
-            partial_dict[key1][key] = float_dimensions(tmp1, "epsilon", temperature)
+            if not nondimensional:
+                for key in partial_dict[key1]:
+                    if key != "charge":
+                        tmp1 = float_dimensions(partial_dict[key1][key], key, temperature, dimensions=True)
+                    else:
+                        tmp1 = partial_dict[key1][key]
+                    partial_dict[key1][key] = float_dimensions(tmp1, "epsilon", temperature)
 
     return partial_dict
 
 
-def multipole_integral(sigma0, beadA, beadB, multipole_terms=None):
+def multipole_integral(beadA, beadB, sigma0=None, lower_bound=None, multipole_terms=None, temperature=None, nondimensional=False):
     r"""
     Calculate the integral of the multipole potential from a given minimum to infinity.
 
     Parameters
     ----------
     sigma0 : float
-        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     beadA : dict
         Dictionary of multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
@@ -967,26 +1047,58 @@ def multipole_integral(sigma0, beadA, beadB, multipole_terms=None):
     beadB : dict
         Dictionary of multipole parameters for bead_B.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
+    sigma0 : float, Optional, default=None
+        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`. If None, the value taken from 'lower_bound' will be used
+    lower_bound : str, Optional, default='rmin'
+        Lower bound of distance array. Can be one of:
+
+        - rmin: the position of the potential well
+        - sigma: the size parameter
 
     multipole_terms : numpy.ndarray, Optional, default=None
-        This list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, respectively. If not provided, this quantity will be calculated.
+        This list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, respectively. If not provided, this quantity will be calculated. These are ALWAYS dimensionless
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
 
     Returns
     -------
     Cmultipole : float
-        Sum of integral terms. :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
+        Sum of integral terms. Either in reduced units :math:`C_{multi}'=C_{multi}/(k_{B})` or dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
     multipole_int_terms : numpy.ndarray
-        This list of terms corresponds to the terms involved in calculation of the energy parameter, epsilon. These terms sum to equal epsilon.
+        This list of terms corresponds to the terms involved in calculation of the energy parameter, epsilon. These terms sum to equal epsilon. Either in reduced units :math:`C_{multi}'=C_{multi}/(k_{B})` or dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
 
     """
 
+    if lower_bound == None and sigma0 == None:
+        raise ValueError("Either a lower bound for integration must be provided with the keyword 'sigma0', or specified with 'lower_bound'")
+
+    if not nondimensional:
+        if temperature is None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        bead1 = dict_dimensions(beadA.copy(), temperature, dimensions=False)
+        bead2 = dict_dimensions(beadB.copy(), temperature, dimensions=False)
+        if sigma0 != None:
+            sigma0 = float_dimensions(sigma0, "sigma", temperature, dimensions=False)
+    else:
+        bead1 = beadA.copy()
+        bead2 = beadB.copy()
+
+    if sigma0 == None:
+        bead_dict = mixed_parameters(bead1, bead2)
+        if lower_bound == "rmin":
+            sigma0 = mie_potential_minimum(bead_dict)
+        elif lower_bound == "sigma":
+            sigma0 = bead_dict["sigma"]
+
     if multipole_terms is None:
-        multipole_terms = calc_cross_multipole_terms(beadA, beadB)
+        multipole_terms = calc_cross_multipole_terms(bead1, bead2, nondimensional=True)
 
     if np.size(multipole_terms) == 4:
         integral = -4 * np.pi * np.array([sigma0**(-1), sigma0**(-3) / 3, sigma0**(-5) / 5, sigma0**(-7) / 7])
@@ -1002,6 +1114,11 @@ def multipole_integral(sigma0, beadA, beadB, multipole_terms=None):
     multipole_int_terms0 = integral * multipole_terms
     Cmultipole = np.sum(multipole_int_terms0)
 
+    if not nondimensional:
+        for tmp in ["epsilon", "sigma", "sigma", "sigma"]:
+            Cmultipole = float_dimensions(Cmultipole,tmp,temperature,dimensions=True)
+            multipole_int_terms0 = float_dimensions(multipole_int_terms0,tmp,temperature,dimensions=True)
+
     return Cmultipole, multipole_int_terms0
 
 
@@ -1010,16 +1127,16 @@ def solve_multipole_cross_interaction_integral(sigma0,
                                                beadB,
                                                multipole_terms=None,
                                                shape_factor_scale=False,
+                                               temperature=None,
+                                               nondimensional=False,
                                                beadAB=None):
     r"""
     Calculation of nondimensionalized cross-interaction potential from multipole moments.
     
-    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
-    
     Parameters
     ----------
     sigma0 : float
-        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     beadA : dict
         Dictionary of multipole parameters for bead_A.
 
@@ -1039,7 +1156,7 @@ def solve_multipole_cross_interaction_integral(sigma0,
         - Sk (float) Shape factor
 
     multipole_terms : numpy.ndarray, Optional, default=None
-        This list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, respectively. If not provided, this quantity will be calculated.
+        This list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, respectively. If not provided, this quantity will be calculated. These are ALWAYS nondimensionalized
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     beadAB : dict
@@ -1049,22 +1166,36 @@ def solve_multipole_cross_interaction_integral(sigma0,
         - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - Sk (float) Shape factor
     
     Returns
     -------
     epsilon : float
-        Cross interaction parameter from analytical solution of extended mixing rules. Array is equal in length to "r". :math:`\epsilon'=\epsilon/(3k_{B}T)`
+        Cross interaction parameter from analytical solution of extended mixing rules. Array is equal in length to "r". Either in reduced units :math:`C_{multi}'=C_{multi}/(k_{B})` or dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
     multipole_int_terms : numpy.ndarray
-        This list of terms corresponds to the terms involved in calculation of the energy parameter, epsilon. Adding these terms together produces the attractive term of the Mie potential, from which the energy parameter can be derived.
+        This list of terms corresponds to the terms involved in calculation of the energy parameter, epsilon. Adding these terms together produces the attractive term of the Mie potential, from which the energy parameter can be derived. Always dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
     """
 
+    if not nondimensional:
+        if temperature is None:
+            logger.error("Temperature should be included when 'nondimensional' is False")
+        bead1 = dict_dimensions(beadA.copy(), temperature, dimensions=False)
+        bead2 = dict_dimensions(beadB.copy(), temperature, dimensions=False)
+        sigma0 = float_dimensions(sigma0,"sigma",temperature,dimensions=False)
+    else:
+        bead1 = beadA.copy()
+        bead2 = beadB.copy()
+
     if beadAB is None:
-        beadAB = mixed_parameters(beadA, beadB)
+        beadAB_new = mixed_parameters(bead1, bead2)
+    else:
+        if not nondimensional:
+            beadAB_new = dict_dimensions(beadAB.copy(), temperature, dimensions=False)
+        else:
+            beadAB_new = beadAB.copy()
 
-    eps_tmp = beadAB["epsilon"]
+    eps_tmp = beadAB_new["epsilon"]
 
-    Cmultipole, multipole_int_terms0 = multipole_integral(sigma0, beadA, beadB, multipole_terms=multipole_terms)
+    Cmultipole, multipole_int_terms0 = multipole_integral(bead1, bead2, sigma0=sigma0, multipole_terms=multipole_terms, nondimensional=True)
 
     eps_min = eps_tmp / 20
     eps_max = eps_tmp * 2
@@ -1072,22 +1203,13 @@ def solve_multipole_cross_interaction_integral(sigma0,
     epsilon = spo.brentq(_obj_energy_parameter_from_integral,
                          eps_min,
                          eps_max,
-                         args=(beadA, beadB, beadAB, Cmultipole, sigma0, shape_factor_scale),
+                         args=(bead1, bead2, beadAB_new, Cmultipole, sigma0, shape_factor_scale),
                          xtol=1e-12)
 
-    # __ Remove these lines so that we would have an accurate representation of the contributions without the Mie terms
-    # __ Add these lines back in to be able to add the multipole terms to equal the energy parameter
-    #sigmaij  = beadAB["sigma"]
-    #lambdaa = beadAB["lambdaa"]
-    #lambdar = beadAB["lambdar"]
-    #Cmie = (sigma/sigmaij)**lambdaa * (lambdaa - 3) / prefactor(lambdar,lambdaa)
-    #if shape_factor_scale:
-    #    Cmie = Cmie/beadA["Sk"]/beadB["Sk"]
-    #multipole_int_terms = Cmie*multipole_int_terms0
-    multipole_int_terms = multipole_int_terms0
+    if not nondimensional:
+        epsilon = float_dimensions(epsilon,"epsilon",temperature,dimensions=True)
 
-    return epsilon, multipole_int_terms
-
+    return epsilon, multipole_int_terms0
 
 def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, sigma0, shape_factor_scale):
     r"""
@@ -1125,7 +1247,7 @@ def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, s
     Cintegral : float
         This sum of the multipole integrals is set equal to the attractive term of the integrated Mie potential to determine the energy parameter.
     sigma0 : float
-        Nondimensionalized value of the lower bound of the integral
+        The lower bound of the integral, can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
 
@@ -1135,7 +1257,7 @@ def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, s
         Difference between multipole term and Mie potential term integral
     """
 
-    Cint = mie_integral(sigma0, beadAB)
+    Cint = mie_integral(beadAB, sigma0=sigma0)
 
     if shape_factor_scale:
         Cint = Cint * beadA["Sk"] * beadB["Sk"]
@@ -1143,14 +1265,14 @@ def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, s
     return eps0 * Cint / beadAB["epsilon"] - Cintegral
 
 
-def mie_integral(sigma0, beadAB):
+def mie_integral(beadAB, sigma0=None, lower_bound=None):
     r"""
     Calculate the integral of the attractive term in the Mie potential from the given minimum value to infinity.
     
     Parameters
     ----------
     sigma0 : float
-        Minimum value for definite integral
+        Minimum value for definite integral. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     beadAB : dict
         Dictionary of mixed Mie parameters for bead1 and bead2.
 
@@ -1159,11 +1281,28 @@ def mie_integral(sigma0, beadAB):
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
 
+    sigma0 : float, Optional, default=None
+        This lower bound of the integral dictates where we expect to start matching the multipole attractive term with that of Mie potential. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`. If None, the value taken from 'lower_bound' will be used
+    lower_bound : str, Optional, default='rmin'
+        Lower bound of distance array. Can be one of:
+
+        - rmin: the position of the potential well
+        - sigma: the size parameter
+
     Returns
     -------
     Cintegral : float
         Value of the definite Mie integral from sigma0 to infinity
     """
+
+    if lower_bound == None and sigma0 == None:
+        raise ValueError("Either a lower bound for integration must be provided with the keyword 'sigma0', or specified with 'lower_bound'")
+
+    if sigma0 == None:
+        if lower_bound == "rmin":
+            sigma0 = mie_potential_minimum(beadAB)
+        elif lower_bound == "sigma":
+            sigma0 = beadAB["sigma"]
 
     integral = -4 * np.pi * beadAB["epsilon"] * prefactor(
         beadAB["lambdar"],
@@ -1171,13 +1310,12 @@ def mie_integral(sigma0, beadAB):
 
     return integral
 
-
 def fit_multipole_cross_interaction_parameter(beadA,
                                               beadB,
-                                              distance_dict={},
+                                              distance_opts={},
                                               distance_array=None,
-                                              fit_attractive_exp=False,
                                               shape_factor_scale=False,
+                                              nondimensional=False,
                                               temperature=None):
     r"""
     Calculation of nondimensionalized cross-interaction parameter for the Mie potential.
@@ -1189,35 +1327,35 @@ def fit_multipole_cross_interaction_parameter(beadA,
     beadA : dict
         Dictionary of Mie and multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
-        - charge (float) Nondimensionalized charge of bead. :math:`q'=q/e`
-        - dipole (float) Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-        - quadrupole (float) Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-        - ionization_energy (float) Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     beadB : dict
         Dictionary of Mie and multipole parameters for bead_B.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
-        - charge (float) Nondimensionalized charge of bead. :math:`q'=q/e`
-        - dipole (float) Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-        - quadrupole (float) Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-        - ionization_energy (float) Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
-    fit_attractive_exp : bool, Optional, default: False
-        If true, the attractive exponential will be fit along with the energy parameter
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     temperature : float, Optional, default=None
-        Temperature at which to evaluate cross interaction parameters, needed to add dimensions to error messages if this step fails.
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
 
     Returns
     -------
@@ -1225,8 +1363,17 @@ def fit_multipole_cross_interaction_parameter(beadA,
         Dictionary of fit epsilon and lambdar, 
     """
 
+    if not nondimensional:
+        if temperature is None:
+            logger.error("Temperature should be included with 'nondimensional' is False")
+        bead1 = dict_dimensions(beadA.copy(), temperature, dimensions=False)
+        bead2 = dict_dimensions(beadB.copy(), temperature, dimensions=False)
+    else:
+        bead1 = beadA.copy()
+        bead2 = beadB.copy()
+
     # Set-up Mie parameters
-    beadAB = mixed_parameters(beadA, beadB)
+    beadAB = mixed_parameters(bead1, bead2)
     Cmie = prefactor(beadAB["lambdar"], beadAB["lambdaa"])
     if shape_factor_scale:
         if "Sk" not in beadA:
@@ -1234,25 +1381,25 @@ def fit_multipole_cross_interaction_parameter(beadA,
         if "Sk" not in beadB:
             beadB["Sk"] = 1.0
 
-    multipole_terms = calc_cross_multipole_terms(beadA, beadB)
+    multipole_terms = calc_cross_multipole_terms(bead1, bead2, nondimensional=True)
 
     # From curve fit
     if distance_array is None:
-        r = calc_distance_array(beadAB, **distance_dict)
+        r = calc_distance_array(beadAB, **distance_opts)
     else:
         r = distance_array
     w_multipole, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
 
     # ___________ VDW parameter mixing _______________
     params, var_matrix = spo.curve_fit(lambda x, K, lambdaa: log_mie_attractive(
-        r, beadA, beadB, lambda_a=lambdaa, Kprefactor=K, shape_factor_scale=shape_factor_scale),
+        r, bead1, bead2, lambda_a=lambdaa, Kprefactor=K, shape_factor_scale=shape_factor_scale),
                                        r,
                                        np.log(-w_multipole),
                                        p0=[beadAB["epsilon"] * Cmie, beadAB["lambdaa"]],
                                        bounds=(0.0, np.inf))
     K = params[0]
     lambdaa_fit = params[1]
-    eps_fit = calc_epsilonij_from_lambda_aij(lambdaa_fit, beadA, beadB)
+    eps_fit = calc_epsilonij_from_lambda_aij(lambdaa_fit, bead1, bead2)
     if K / eps_fit < 1.01:
         raise ValueError(
             "A suitable repulsive exponent cannot be calculated using the following cross interaction parameters:\n    epsilon: {}, lambdaa: {}, Cmie: {} < 1.0\n    Check self-interaction parameters above. A common cause could be poorly fit polarizability because a partial charge was assigned to an bead where it's Mie potential is fit to expect dipole to be the highest order."
@@ -1264,21 +1411,27 @@ def fit_multipole_cross_interaction_parameter(beadA,
             raise ValueError("This shouldn't happen, check given parameters.")
 
     # Save output
-    output_dict = {}
-    output_dict["lambdaa_fit"] = lambdaa_fit
-    output_dict["epsilon_fit"] = eps_fit
-    output_dict["lambdar_fit"] = lambdar_fit
-    output_dict["epsilon_saft"] = beadAB["epsilon"] * np.sqrt(
-        beadA["sigma"]**3 * beadB["sigma"]**3) / beadAB["sigma"]**3
-    output_dict["kij_saft"] = 1 - output_dict["epsilon_saft"] / beadAB["epsilon"]
-    output_dict["kij_fit"] = 1 - output_dict["epsilon_fit"] / beadAB["epsilon"]
+    if not nondimensional:
+        tmp = beadAB["epsilon"] * np.sqrt(bead1["sigma"]**3 * bead2["sigma"]**3) / beadAB["sigma"]**3
+        beadAB["epsilon_saft"] = float_dimensions(tmp,"epsilon",temperature,dimensions=True)
+        beadAB["epsilon"] = float_dimensions(eps_fit,"epsilon",temperature,dimensions=True)
+        beadAB["K"] = float_dimensions(K,"epsilon",temperature,dimensions=True)
+        beadAB["K_variance"] = float_dimensions(var_matrix[1][1],"epsilon",temperature,dimensions=True)
+        beadAB["sigma"] = float_dimensions(beadAB["sigma"],"sigma",temperature,dimensions=True)
+    else:
+        beadAB["epsilon_saft"] = beadAB["epsilon"] * np.sqrt(
+            bead1["sigma"]**3 * bead2["sigma"]**3) / beadAB["sigma"]**3
+        beadAB["epsilon"] = eps_fit
+        beadAB["K"] = K
+        beadAB["K_variance"] = var_matrix[1][1]
 
-    output_dict["lambdaa_variance"] = var_matrix[0][0]
-    output_dict["K"] = K
-    output_dict["K_variance"] = var_matrix[1][1]
+    beadAB["lambdaa"] = lambdaa_fit
+    beadAB["lambdaa_variance"] = var_matrix[0][0]
+    beadAB["lambdar"] = lambdar_fit
+    beadAB["kij_saft"] = 1 - beadAB["epsilon_saft"] / np.sqrt(bead1["epsilon"]*bead2["epsilon"])
+    beadAB["kij"] = 1 - beadAB["epsilon"] / np.sqrt(bead1["epsilon"]*bead2["epsilon"])
 
-    return output_dict
-
+    return beadAB
 
 def log_mie_attractive(r, bead1, bead2, lambda_a=None, Kprefactor=None, epsilon=None, shape_factor_scale=False):
     r"""
@@ -1348,15 +1501,14 @@ def log_mie_attractive(r, bead1, bead2, lambda_a=None, Kprefactor=None, epsilon=
     return np.log(Kprefactor) + lambda_a * np.log(sigma / r)
 
 
-def calc_self_mie_from_multipole(
-    bead_dict,
-    mie_vdw=None,
-    temperature=298,
-    lambda_r=12,
-    distance_dict={},
-    distance_array=None,
-    shape_factor_scale=False,
-):
+def calc_self_mie_from_multipole(bead_dict,
+                                 mie_vdw=None,
+                                 temperature=298,
+                                 lambda_r=12,
+                                 distance_opts={},
+                                 distance_array=None,
+                                 shape_factor_scale=False,
+                                 nondimensional=False):
     r"""
     Calculation of self-interaction parameters for the Mie potential from multipole moments.
 
@@ -1367,26 +1519,28 @@ def calc_self_mie_from_multipole(
     bead_dict : dict
         Dictionary of Mie and multipole parameters for bead_A.
 
-        - epsilon (float) Nondimensionalized energy parameter, :math:`\epsilon'=\epsilon/(3k_{B}T)`
-        - sigma (float) Nondimensionalized size parameter, :math:`\sigma'=\sigma (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) Nondimensionalized polarizability of bead. :math:`\alpha'=\alpha (4 \pi \epsilon_{0})^{2} 3k_{B}T  e^{-6}`
-        - charge (float) Nondimensionalized charge of bead. :math:`q'=q/e`
-        - dipole (float) Nondimensionalized dipole of bead. :math:`\mu'=\mu (4 \pi \epsilon_{0}) 3k_{B}T e^{-3}`
-        - quadrupole (float) Nondimensionalized quadrupole of bead. :math:`Q'=Q (4 \pi \epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
-        - ionization_energy (float) Nondimensionalized ionization_energy of bead. :math:`I'=I/(3k_{B}T)`
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi epsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi epsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     mie_vdw : float, Optional, default=None
         This nondimensionalized attractive parameter for the Mie potential is related not only to the Mie exponents but also to the triple and critical temperatures of a substance. It can be used to specify the repulsive exponent, otherwise a value of 12 is assumed
     lambda_r : float, Optional, default=12
         Assumed repulsive exponent. This quantity can be changed later as long as the energy parameter is scaled accordingly.
     temperature : float, Optional, default=298
-        The temperature of the system in Kelvin
+        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
-    distance_dict : dict, Optional, default={}
+    distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
 
     Returns
     -------
@@ -1394,17 +1548,19 @@ def calc_self_mie_from_multipole(
         Dictionary with energy parameter and exponents for Mie cross interaction between the given beads.
     """
 
-    tmp_dict = {"tmp": bead_dict.copy()}
-    tmp_dict = dict_dimensions(tmp_dict, temperature, dimensions=False)
-    bead_dict_new = tmp_dict["tmp"]
+    if not nondimensional:
+        logger.info("Calculating cross-interaction parameter with temperature of {}.".format(temperature))
+        bead_dict_new = dict_dimensions(bead_dict.copy(), temperature, dimensions=False)
+    else:
+        bead_dict_new = bead_dict.copy()
 
     if shape_factor_scale:
         if "Sk" not in bead_dict_new:
             bead_dict_new["Sk"] = 1.0
 
-    multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new)
+    multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new, nondimensional=True)
     if distance_array is None:
-        r = calc_distance_array(bead_dict_new, **distance_dict)
+        r = calc_distance_array(bead_dict_new, **distance_opts)
     else:
         r = distance_array
     w_multipole, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
@@ -1429,13 +1585,12 @@ def calc_self_mie_from_multipole(
     else:
         bead_dict_new["epsilon"] = K / prefactor(bead_dict_new["lambdar"], bead_dict_new["lambdaa"])
 
-    tmp_dict = {"tmp": bead_dict_new}
-    tmp_dict = dict_dimensions(tmp_dict, temperature, dimensions=False)
+    if not nondimensional:
+        bead_dict_new = dict_dimensions(bead_dict_new, temperature, dimensions=True)
 
-    return tmp_dict["tmp"]
+    return bead_dict_new
 
-
-def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=False, distance_dict={}):
+def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=False, distance_opts={}, polarizability_opts={}):
     r"""
     Calculate and output the cross-interaction parameters for the provided dictionary of beads utilizing the Mie potential.
 
@@ -1457,11 +1612,13 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
         - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
 
     temperature : float
-        The temperature of the system
+        The temperature in [K] of the system
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
-    distance_dict : dict, Optional, default={}
+    distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
+    polarizability_opts : dict, Optional, default={}
+        Dictionary of keyword arguements used in :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`
 
     Returns
     -------
@@ -1481,15 +1638,11 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
 
     bead_library_new = dict_dimensions(bead_library.copy(), temperature, dimensions=False)
 
-    # calculate polarizability
-    for bead in bead_library_new.keys():
-        r = calc_distance_array(bead_library_new[bead], **distance_dict)
-        pol_tmp, _ = fit_polarizability(r, bead_library_new[bead], shape_factor_scale=shape_factor_scale)
-        if np.isnan(pol_tmp):
-            raise ValueError(
-                "Error: Bead {} cannot fit suitable polarizability. Attractive exponent is most likely not suitable given the bead partial charges."
-            )
-        bead_library_new[bead]["polarizability"] = pol_tmp
+    polarizability_opts.update({"shape_factor_scale":shape_factor_scale})
+    bead_library_new = calc_polarizability(bead_library_new,
+                                           distance_opts=distance_opts, 
+                                           polarizability_opts=polarizability_opts,
+                                           nondimensional=True)
 
     # Calculate cross interaction file
     dict_cross = {}
@@ -1500,36 +1653,31 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
             dict_cross[bead1] = {}
             dict_summary[bead1] = {}
             for bead2 in beads[i + 1:]:
-                if np.any(
-                        np.isnan(
-                            [bead_library_new[bead1]["polarizability"], bead_library_new[bead2]["polarizability"]])):
-                    raise ValueError("Error: polarizabilities of {} and {}: {}, {}".format(
-                        bead1, bead2, bead_library_new[bead1]["polarizability"],
-                        bead_library_new[bead2]["polarizability"]))
 
                 cross_out = fit_multipole_cross_interaction_parameter(bead_library_new[bead1],
                                                                       bead_library_new[bead2],
-                                                                      distance_dict=distance_dict,
+                                                                      distance_opts=distance_opts,
                                                                       shape_factor_scale=shape_factor_scale,
+                                                                      nondimensional=True,
                                                                       temperature=temperature)
 
                 pol_i = float_dimensions(bead_library_new[bead1]["polarizability"], "polarizability", temperature)
                 pol_j = float_dimensions(bead_library_new[bead2]["polarizability"], "polarizability", temperature)
                 epsilon_saft = float_dimensions(cross_out["epsilon_saft"], "epsilon", temperature)
-                epsilon_fit = float_dimensions(cross_out["epsilon_fit"], "epsilon", temperature)
+                epsilon_fit = float_dimensions(cross_out["epsilon"], "epsilon", temperature)
 
                 dict_cross[bead1][bead2] = {
-                    "epsilon": cross_out["epsilon_fit"],
-                    "lambdar": cross_out["lambdar_fit"],
-                    "lambdaa": cross_out["lambdaa_fit"]
+                    "epsilon": cross_out["epsilon"],
+                    "lambdar": cross_out["lambdar"],
+                    "lambdaa": cross_out["lambdaa"]
                 }
                 dict_summary[bead1][bead2] = {
                     "epsilon_saft": epsilon_saft,
                     "kij_saft":  cross_out["kij_saft"],
                     "epsilon": epsilon_fit,
-                    "kij": cross_out["kij_fit"],
-                    "lambdar": cross_out["lambdar_fit"],
-                    "lambdaa": cross_out["lambdaa_fit"],
+                    "kij": cross_out["kij"],
+                    "lambdar": cross_out["lambdar"],
+                    "lambdaa": cross_out["lambdaa"],
                     "polarizability_"+bead1: pol_i,
                     "polarizability_"+bead2: pol_j,
                 }
@@ -1539,7 +1687,7 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
     return dict_cross, dict_summary
 
 
-def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_scale=False, distance_dict={}):
+def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_scale=False, distance_opts={}, polarizability_opts={}):
     r"""
     Calculate and output the cross-interaction energy parameter for the provided dictionary of beads utilizing the Mie potential, using the Analytical (i.e. integral) method
 
@@ -1561,11 +1709,13 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
         - ionization_energy (float) [kcal/mol] Ionization energy of bead fragment
 
     temperature : float
-        The temperature of the system
+        The temperature in [K] of the system
     shape_factor_scale : bool, Optional, default: False
         Scale energy parameter based on shape factor epsilon*Si*Sj
-    distance_dict : dict, Optional, default={}
+    distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
+    polarizability_opts : dict, Optional, default={}
+        Dictionary of keyword arguements used in :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`
 
     Returns
     -------
@@ -1583,16 +1733,17 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
         - polarizability_*: polarizabilities for the two beads
     """
 
+    if temperature == None or np.isnan(temperature):
+        raise ValueError("Temperature must be a real number, given {}.".format(temperature))
+
     bead_library_new = dict_dimensions(bead_library.copy(), temperature, dimensions=False)
-    # calculate polarizability
-    for bead in bead_library_new.keys():
-        r = calc_distance_array(bead_library_new[bead], **distance_dict)
-        pol_tmp = solve_polarizability_integral(r[0], bead_library_new[bead], shape_factor_scale=shape_factor_scale)
-        if np.isnan(pol_tmp):
-            raise ValueError(
-                "Error: Bead {} cannot fit suitable polarizability. No value will allow the integrated multipole moment to match the integrated Mie potential"
-                .format(bead))
-        bead_library_new[bead]["polarizability"] = pol_tmp
+
+    polarizability_opts.update({"shape_factor_scale":shape_factor_scale})
+    bead_library_new = calc_polarizability(bead_library_new,
+                                           distance_opts=distance_opts,
+                                           polarizability_opts=polarizability_opts,
+                                           calculation_method="analytical",
+                                           nondimensional=True)
 
     # Calculate cross interaction file
     dict_cross = {}
@@ -1605,15 +1756,12 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
             dict_summary[bead1] = {}
             for bead2 in beads[i + 1:]:
                 beadB = bead_library_new[bead2]
-                if np.any(np.isnan([beadA["polarizability"], beadB["polarizability"]])):
-                    raise ValueError("Error: polarizabilities of {} and {}: {}, {}".format(
-                        bead1, bead2, beadA["polarizability"], beadB["polarizability"]))
-
                 beadAB = mixed_parameters(beadA, beadB)
-                r = calc_distance_array(beadAB, **distance_dict)
+                r = calc_distance_array(beadAB, **distance_opts)
                 epsilon_tmp, terms = solve_multipole_cross_interaction_integral(r[0],
                                                                                 beadA,
                                                                                 beadB,
+                                                                                nondimensional=True,
                                                                                 shape_factor_scale=shape_factor_scale)
 
                 pol_i = float_dimensions(beadA["polarizability"], "polarizability", temperature)
@@ -1676,6 +1824,9 @@ def dict_dimensions(parameters, temperature, dimensions=True, conv_custom={}):
         This dictionary of bead types contains a dictionary of parameters for each.
     """
 
+    if temperature == None or np.isnan(temperature):
+        raise ValueError("Temperature must be a real number, given {}.".format(temperature))
+
     # Nondimensionalize Parameters
     C_l = 1e+10  # [Ang/m]
     C_D = 3.33564e-20  # [C*Ang/Debye]
@@ -1702,26 +1853,35 @@ def dict_dimensions(parameters, temperature, dimensions=True, conv_custom={}):
     new_parameters = {}
     for k1, v1 in parameters.items():
         new_parameters[k1] = {}
-        for k2, v2 in v1.items():
-            if type(v2) == dict:
-                new_parameters[k1][k2] = {}
-                for k3, v3 in v2.items():
-                    if k3 in conv:
-                        if dimensions:
-                            new_parameters[k1][k2][k3] = v3 / conv[k3]
+        if type(v1) == dict:
+            for k2, v2 in v1.items():
+                if type(v2) == dict:
+                    new_parameters[k1][k2] = {}
+                    for k3, v3 in v2.items():
+                        if k3 in conv:
+                            if dimensions:
+                                new_parameters[k1][k2][k3] = v3 / conv[k3]
+                            else:
+                                new_parameters[k1][k2][k3] = v3 * conv[k3]
                         else:
-                            new_parameters[k1][k2][k3] = v3 * conv[k3]
-                    else:
-                        new_parameters[k1][k2][k3] = v3
-            else:
-
-                if k2 in conv:
-                    if dimensions:
-                        new_parameters[k1][k2] = v2 / conv[k2]
-                    else:
-                        new_parameters[k1][k2] = v2 * conv[k2]
+                            new_parameters[k1][k2][k3] = v3
                 else:
-                    new_parameters[k1][k2] = v2
+
+                    if k2 in conv:
+                        if dimensions:
+                            new_parameters[k1][k2] = v2 / conv[k2]
+                        else:
+                            new_parameters[k1][k2] = v2 * conv[k2]
+                    else:
+                        new_parameters[k1][k2] = v2
+        else:
+            if k1 in conv:
+                if dimensions:
+                    new_parameters[k1] = v1 / conv[k1]
+                else:
+                    new_parameters[k1] = v1 * conv[k1]
+            else:
+                new_parameters[k1] = v1
 
     return new_parameters
 
@@ -1795,6 +1955,3 @@ def float_dimensions(parameter, parameter_type, temperature, dimensions=True, co
     return new_parameter
 
 
-if __name__ == "__main__":
-    # Do something if this file is invoked on its own
-    print("This is an imported module!")
