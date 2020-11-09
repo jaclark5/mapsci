@@ -1,5 +1,6 @@
 """
 
+
 MAPSCI: Multipole Approach of Predicting and Scaling Cross Interactions
 
 Handles the primary functions
@@ -52,6 +53,8 @@ def calc_distance_array(bead_dict, tol=0.01, max_factor=2, lower_bound="rmin"):
         rm = bead_dict["sigma"]
     elif lower_bound == "tolerance":
         rm = bead_dict["sigma"] * (1 / tol)**(1 / (bead_dict["lambdar"] - bead_dict["lambdaa"]))
+    else:
+        raise ValueError("Method, {}, is not supported to calculating lower_bound of fitting/integration".format(lower_bound))
 
     r_array = np.linspace(rm, max_factor * rm, num=10000)
 
@@ -300,7 +303,7 @@ def calc_self_multipole_potential(r, polarizability, bead_dict, temperature=None
     Returns
     -------
     potential : numpy.ndarray
-        Multipole potential between beads based on multipole moments that is scaled by :math:`k_{B}` in [K], or nondimensionalized as :math:`\phi'=\phi/(3k_{B}T)` Array is equal in length to "r".
+        Multipole potential between beads based on multipole moments that is in [kcal/mol], or nondimensionalized as :math:`\phi'=\phi/(3k_{B}T)` Array is equal in length to "r".
 
     """
 
@@ -332,7 +335,7 @@ def calc_self_multipole_potential(r, polarizability, bead_dict, temperature=None
               + t41/r**10
 
     if not nondimensional:
-        potential = float_dimensions(potential,"epsilon",temperature,dimensions=True)
+        potential = float_dimensions(potential,"ionization_energy",temperature,dimensions=True)
 
     return potential
 
@@ -532,7 +535,7 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
     bead_dict_new["polarizability"] = polarizability
     output = fit_multipole_cross_interaction_parameter(bead_dict_new, bead_dict_new, distance_array=r, nondimensional=True)
 
-    logger.info(
+    logger.warning(
         "Refitting attractive exponent with estimated polarizability of {} yields: lamba_a {}, epsilon {}".format(
             bead_dict_new["polarizability"], output["lambdaa"], output["epsilon"]))
 
@@ -685,7 +688,7 @@ def calc_cross_multipole_terms(bead1, bead2, temperature=None, nondimensional=Fa
 
     t41 = 21. / 5. * beadA['quadrupole']**2. * beadB['quadrupole']**2.
 
-    multipole_terms = np.array([t11, t12, t21, t22, t23, t24, t31, t32, t41])
+    multipole_terms = np.array([t11, t12, t21, t22, t23, t24, t31, t32, t41], dtype=object)
 
     return multipole_terms
 
@@ -842,7 +845,7 @@ def partial_polarizability(bead_dict0, temperature=None, sigma0=None, lower_boun
         if temperature is None:
             temperature = 298
             logger.info("Using default temperature of 298 K")
-            bead_dict = dict_dimensions(bead_dict0.copy(), temperature, dimensions=False)
+        bead_dict = dict_dimensions(bead_dict0.copy(), temperature, dimensions=False)
     else:
         bead_dict = bead_dict0.copy()
 
@@ -982,8 +985,11 @@ def partial_energy_parameter(beadA,
             logger.info("Using default temperature of 298 K")
         bead1 = dict_dimensions(beadA.copy(), temperature, dimensions=False)
         bead2 = dict_dimensions(beadB.copy(), temperature, dimensions=False)
+    else:
+        bead1 = beadA.copy()
+        bead2 = beadB.copy()
 
-    bead_dict = {"0": beadA.copy(), "1": beadB.copy()}
+    bead_dict = {"0": bead1, "1": bead2}
     polarizability_opts.update({"shape_factor_scale":shape_factor_scale})
     bead_dict = calc_polarizability(bead_dict,
                                     distance_opts=distance_opts,
@@ -1562,6 +1568,7 @@ def calc_self_mie_from_multipole(bead_dict,
                                  lambda_r=12,
                                  distance_opts={},
                                  distance_array=None,
+                                 polarizability_opts={},
                                  shape_factor_scale=False,
                                  nondimensional=False):
     r"""
@@ -1594,6 +1601,8 @@ def calc_self_mie_from_multipole(bead_dict,
         Scale energy parameter based on shape factor epsilon*Si*Sj
     distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
+    polarizability_opts : dict, Optional, default={}
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.solve_polarizability_integral`
     nondimensional : bool, Optional, default=False
         Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
     distance_array : numpy.ndarray, Optional, default=None
@@ -1603,6 +1612,11 @@ def calc_self_mie_from_multipole(bead_dict,
     -------
     cross_dict : dict
         Dictionary with energy parameter and exponents for Mie cross interaction between the given beads.
+
+        - epsilon (float) Fit energy parameter, scaled by :math:`k_{B}` in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - lambdar (float) Repulsive exponent, if mie_vdw is provided, otherwise this is the same value that was given.
+        - lambdaa (float) Fit attractive exponent
+
     """
 
     if not nondimensional:
@@ -1614,6 +1628,10 @@ def calc_self_mie_from_multipole(bead_dict,
     if shape_factor_scale:
         if "Sk" not in bead_dict_new:
             bead_dict_new["Sk"] = 1.0
+
+    if "polarizability" not in bead_dict_new:
+        logger.debug("Calculating polarizability")
+        bead_dict_new = calc_polarizability(bead_dict_new, distance_opts=distance_opts, calculation_method="fit", polarizability_opts=polarizability_opts, nondimensional=True)
 
     multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new, nondimensional=True)
     if distance_array is None:
@@ -1634,8 +1652,6 @@ def calc_self_mie_from_multipole(bead_dict,
     if mie_vdw is not None:
         logger.info("Overwrite given lambdar with Mie potential relationship to vdW like parameter.")
         bead_dict_new["lambdar"] = calc_lambdarij_from_lambda_aij(bead_dict_new["lambdaa"], mie_vdw)
-    else:
-        bead_dict_new["lambdar"] = lambda_r
 
     if shape_factor_scale:
         bead_dict_new["epsilon"] = K / prefactor(bead_dict_new["lambdar"], bead_dict_new["lambdaa"]) / bead_dict_new["Sk"]**2
