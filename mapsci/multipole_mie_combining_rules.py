@@ -10,7 +10,7 @@ import numpy as np
 import scipy.optimize as spo
 import logging
 
-from mapsci import quick_plots as qp
+from mapsci.quick_plots import plot_potential, plot_multipole_potential
 
 logger = logging.getLogger(__name__)
 
@@ -542,20 +542,20 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
     if plot_fit:
         w_mie = calc_mie_attractive_potential(r, bead_dict_new)
         plot_opts = {"label":"Mie", "color": "k", "linestyle": "--"}
-        qp.plot_potential(r, w_mie, plot_opts=plot_opts, show=False)
+        plot_potential(r, w_mie, plot_opts=plot_opts, show=False)
 
         bead_dict_plot = bead_dict_new.copy()
         bead_dict_plot.update({"epsilon": output["epsilon"], "lambdaa": output["lambdaa"]})
         w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot)
         plot_opts = {"label":"Mie fit", "color": "r", "linestyle": "--"}
-        qp.plot_potential(r, w_mie_fit, plot_opts=plot_opts, show=False)
+        plot_potential(r, w_mie_fit, plot_opts=plot_opts, show=False)
 
         multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new, nondimensional=True)
         tmp = ["charge-dipole", "charge-induced_dipole", "induced_dipole-induced_dipole", "dipole-dipole", "dipole-induced_dipole", "charge-quadrupole", "dipole-quadrupole", "induced_dipole-quadrupole", "quadrupole-quadrupole"]
         logger.debug(("{}: {{{}}}\n"*len(tmp)).format(*[val for val in tmp for _ in range(2)]).format(**dict(zip(tmp,A)))) 
 
         potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
-        qp.plot_multipole_potential(r, potential, potential_terms=potential_terms)
+        plot_multipole_potential(r, potential, potential_terms=potential_terms)
 
     return output["epsilon"]
 
