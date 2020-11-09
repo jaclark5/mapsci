@@ -1,23 +1,21 @@
 
-import os
-import sys
 import numpy as np
-import mapsci.multipole_mie_combining_rules as mr
+import mapsci.multipole_Mie_combining_rules as mr
 
 def plot_multipole_potential(r, potential, potential_terms=None, show=True):
     r"""
-    Plot multipole potential and contribution of each multipole interaction (if provided).
+    Plot multipole potential and if provided, the contribution of each multipole interaction.
     
     Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
     
     Parameters
     ----------
     r : numpy.ndarray
-        Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        Array (or float) of nondimensionalized distance between two beads. Reported in :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     potential : numpy.ndarray
-        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)`
-    multipole_terms : numpy.ndarray
-        This can be either a list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions.
+        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". Reported in nondimensionalized :math:`\phi'=\phi/(3k_{B}T)`
+    potential_terms : numpy.ndarray
+        This can be either a list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions. Calculated from :func:`~mapsci.multipole_Mie_combining_rules.calc_cross_multipole_terms`
     show : bool, Optional, default=True
         Dictate whether plt.show() should be executed within this function
     """
@@ -65,14 +63,16 @@ def plot_potential(r, potential, plot_opts={}, show=True):
     r"""
     Plot given potential
     
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+
     Parameters
     ----------
     r : numpy.ndarray
-        Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
+        Array (or float) of nondimensionalized distance between two beads. Reported in angstroms or :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     potential : numpy.ndarray
-        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)`
+        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". Reported in units reduced by the Boltzmann constant, [K] or nondimensionalized as :math:`\phi'=\phi/(3k_{B}T)`
     plot_opts : dict, Optional, default={}
-        Keyword arguements for matplotlib.pyplot.plot
+        Keyword arguments for matplotlib.pyplot.plot
     show : bool, Optional, default=True
         Dictate whether plt.show() should be executed within this function
     """
@@ -95,14 +95,16 @@ def plot_potential(r, potential, plot_opts={}, show=True):
             plt.tight_layout()
             plt.show()
 
-def plot_abs_dev_mie_multipole_potentials(bead_dict0, distance_opts={}, temperature=None, nondimensional=False, plot_opts={}, axs=None, title=None, ylabel="$(V_{Mie}-V_{Multipole})/k_B$", xlabel=None, beadAB={}):
+def plot_abs_dev_Mie_multipole_potentials(bead_dict0, beadAB={}, distance_opts={}, temperature=None, nondimensional=False, plot_opts={}, axs=None, title=None, ylabel="$(V_{Mie}-V_{Multipole})/k_B$", xlabel=None):
     r"""
     Plot absolute deviation between Mie and Multipole potentials
     
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+
     Parameters
     ----------
-    bead_dict : dict
-        Dictionary of mie and multipole parameters. Those parameters may be:
+    bead_dict0 : dict
+        Dictionary of Mie and multipole parameters. Those parameters may be:
         
         - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
         - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
@@ -115,7 +117,7 @@ def plot_abs_dev_mie_multipole_potentials(bead_dict0, distance_opts={}, temperat
         - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     beadAB : dict, Optional, default={}
-        Dictionary of cross-interaction parameters for mie potential.
+        Dictionary of cross-interaction parameters for Mie potential.
         
         - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
         - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
@@ -123,15 +125,21 @@ def plot_abs_dev_mie_multipole_potentials(bead_dict0, distance_opts={}, temperat
         - lambdaa (float) Attractive exponent
 
     distance_opts : dict, Optional, default={}
-        Dictionary of keyword arguements for :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_Mie_combining_rules.calc_distance_array`
     temperature : float, Optional, default=None
-        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
     nondimensional : bool, Optional, default=False
-        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_Mie_combining_rules.dict_dimensions`
     plot_opts : dict, Optional, default={}
-        Keyword arguements for matplotlib.pyplot.plot
-    axs : obj, Optiona, default=None
+        Keyword arguments for matplotlib.pyplot.plot
+    axs : obj, Optional, default=None
         Subplot instance, if none, matplotlib.pyplot.plot is used 
+    title : str, Optional, default=None
+        Title of plot or subplot (if axs object is provided)
+    ylabel : str, Optional, default="$(V_{Mie}-V_{Multipole})/k_B$"
+        Label for y-axis, if None, the label is removed
+    xlabel : str, Optional, default="r [$\AA$]"/"r $\it{e}^2/(4\pi\epsilon_0 3k_BT)$"
+        Label for x-axis, if None, the label is removed. The default value is determined by `nondimensional`
     """
 
     try:
@@ -157,29 +165,29 @@ def plot_abs_dev_mie_multipole_potentials(bead_dict0, distance_opts={}, temperat
             keys = list(bead_dict.keys())
             flag = True
         elif np.any(tmp):
-            raise ValueError("Dictionary should be either a single beads parameters, or a dicitonary of dictionaries containing the parameters of several beads.")
+            raise ValueError("Dictionary should be either a single beads parameters, or a dictionary of dictionaries containing the parameters of several beads.")
         else:
             flag = False 
 
         if flag:
-            bead12 = mr.fit_multipole_cross_interaction_parameter(bead_dict[keys[0]], bead_dict[keys[1]], distance_dict=distance_opts, nondimensional=True)
+            bead12 = mr.fit_multipole_cross_interaction_parameter(bead_dict[keys[0]], bead_dict[keys[1]], distance_opts=distance_opts, nondimensional=True)
             if len(beadAB0) != 0:
                 bead12.update(beadAB0)
 
             r = mr.calc_distance_array(bead12, **distance_opts)
 
-            w_mie = mr.calc_mie_attractive_potential(r, bead12)
+            w_Mie = mr.calc_Mie_attractive_potential(r, bead12)
             multipole_terms = mr.calc_cross_multipole_terms(bead_dict[keys[0]], bead_dict[keys[1]], nondimensional=True)
             w_multipole, potential_terms = mr.calc_cross_multipole_potential(r,multipole_terms, total_only=False)
 
         else:
             r = mr.calc_distance_array(bead_dict, **distance_opts)
 
-            w_mie = mr.calc_mie_attractive_potential(r, bead_dict)
+            w_Mie = mr.calc_Mie_attractive_potential(r, bead_dict)
             multipole_terms = mr.calc_cross_multipole_terms( bead_dict, bead_dict, nondimensional=True)
             w_multipole, potential_terms = mr.calc_cross_multipole_potential(r,multipole_terms, total_only=False)
 
-        y = w_mie-w_multipole
+        y = w_Mie-w_multipole
 
         if not nondimensional:
             r = mr.float_dimensions(r, "sigma", temperature)
@@ -221,7 +229,7 @@ def plot_self_potential_absolute_deviation(bead_library, temperature=None, nondi
     Parameters
     ----------
     bead_library : dict
-        Dictionary of beads and associated dictionaries of their mie and multipole parameters. Those parameters may be:
+        Dictionary of beads and associated dictionaries of their Mie and multipole parameters. Those parameters may be:
         
         - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
         - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
@@ -234,16 +242,16 @@ def plot_self_potential_absolute_deviation(bead_library, temperature=None, nondi
         - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     distance_opts : dict, Optional, default={}
-        Dictionary of keyword arguements for :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_Mie_combining_rules.calc_distance_array`
     temperature : float, Optional, default=None
-        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
     nondimensional : bool, Optional, default=False
-        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_Mie_combining_rules.dict_dimensions`
     polarizability_opts : dict, Optional, default={}
-        Options used in :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`. Used if polarizability isn't provided for all beads.
+        Options used in :func:`~mapsci.multipole_Mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_Mie_combining_rules.calc_polarizability`. Used if polarizability isn't provided for all beads.
     plot_opts : dict, Optional, default={}
-        Keyword arguements for matplotlib.pyplot.plot
-    axs : obj, Optiona, default=None
+        Keyword arguments for matplotlib.pyplot.plot
+    axs : obj, Optional, default=None
         Subplot instance, if none, matplotlib.pyplot.plot is used 
     """
 
@@ -272,16 +280,18 @@ def plot_self_potential_absolute_deviation(bead_library, temperature=None, nondi
             else:
                 ylabel = "$(V_{Mie}-V_{Multipole})/k_B$"
     
-            plot_abs_dev_mie_multipole_potentials(bead_dict, distance_opts=distance_opts, nondimensional=nondimensional, temperature=temperature, plot_opts=plot_opts, axs=axs[i], title=title, ylabel=ylabel)
+            plot_abs_dev_Mie_multipole_potentials(bead_dict, distance_opts=distance_opts, nondimensional=nondimensional, temperature=temperature, plot_opts=plot_opts, axs=axs[i], title=title, ylabel=ylabel)
 
 def plot_cross_potential_absolute_deviation(beadA, beadB, temperature=None, nondimensional=False, distance_opts={}, polarizability_opts={}, **kwargs):
     r"""
     Plot absolute deviation between Mie and Multipole potentials for a set of beads
     
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+
     Parameters
     ----------
     beadA : dict
-        Dictionary of a bead's mie and multipole parameters. Those parameters may be:
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
         
         - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
         - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
@@ -294,7 +304,7 @@ def plot_cross_potential_absolute_deviation(beadA, beadB, temperature=None, nond
         - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     beadB : dict
-        Dictionary of a bead's mie and multipole parameters. Those parameters may be:
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
         
         - epsilon (float) Energy parameter in [K], or nondimensionalized as math:`\epsilon'=\epsilon/(3k_{B}T)`
         - sigma (float) Size parameter in [angstroms], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi epsilon_{0}) 3k_{B}T e^{-2}`
@@ -307,13 +317,15 @@ def plot_cross_potential_absolute_deviation(beadA, beadB, temperature=None, nond
         - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
     distance_opts : dict, Optional, default={}
-        Dictionary of keyword arguements for :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_Mie_combining_rules.calc_distance_array`
     temperature : float, Optional, default=None
-        Temperature in [K] for adding and removing demensions, if the parameters are nondinensionalized, this value isn't used.
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
     nondimensional : bool, Optional, default=False
-        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_Mie_combining_rules.dict_dimensions`
     polarizability_opts : dict, Optional, default={}
-        Options used in :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`. Used if polarizability isn't provided for all beads.
+        Options used in :func:`~mapsci.multipole_Mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_Mie_combining_rules.calc_polarizability`. Used if polarizability isn't provided for all beads.
+    kwargs
+        Other keyword arguments to be passed to :func:`~mapsci.quick_plots.plot_abs_dev_Mie_multipole_potentials`
     """
     try:
         import matplotlib.pyplot as plt
@@ -336,16 +348,18 @@ def plot_cross_potential_absolute_deviation(beadA, beadB, temperature=None, nond
 
         bead_library_new = {"bead1": bead1, "bead2": bead2}
 
-        plot_abs_dev_mie_multipole_potentials(bead_library_new, distance_opts=distance_opts, nondimensional=nondimensional, temperature=temperature, **kwargs)
+        plot_abs_dev_Mie_multipole_potentials(bead_library_new, distance_opts=distance_opts, nondimensional=nondimensional, temperature=temperature, **kwargs)
             
-def plot_mie_multipole_integral_difference(beadA, beadB, temperature, polarizability_opts={}, lower_bounds=["rmin","sigma"], max_factors=[1.5,1.75,2,2.25,2.5,3,4], savefig=True, filename="integral_difference.pdf", show=True):
+def plot_Mie_multipole_integral_difference(beadA, beadB, temperature, polarizability_opts={}, lower_bounds=["rmin","sigma"], max_factors=[1.5,1.75,2,2.25,2.5,3,4], savefig=True, filename="integral_difference.pdf", show=True):
     r"""
     Plot absolute deviation between Mie and Multipole potentials for a set of beads
+    
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\epsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
     
     Parameters
     ----------
     beadA : dict
-        Dictionary of a bead's mie and multipole parameters. Those parameters may be:
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
         
         - epsilon (float) Energy parameter in [K]
         - sigma (float) Size parameter in [angstroms]
@@ -358,7 +372,7 @@ def plot_mie_multipole_integral_difference(beadA, beadB, temperature, polarizabi
         - polarizability (float) Polarizability of bead in [angstroms^3]
 
     beadB : dict
-        Dictionary of a bead's mie and multipole parameters. Those parameters may be:
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
         
         - epsilon (float) Energy parameter in [K]
         - sigma (float) Size parameter in [angstroms]
@@ -371,13 +385,13 @@ def plot_mie_multipole_integral_difference(beadA, beadB, temperature, polarizabi
         - polarizability (float) Polarizability of bead in [angstroms^3]
 
     temperature : float
-        Temperature in [K] for adding and removing demensions
+        Temperature in [K] for adding and removing dimensions
     polarizability_opts : dict, Optional, default={}
-        Options used in :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`. Used if polarizability isn't provided for all beads.
+        Options used in :func:`~mapsci.multipole_Mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_Mie_combining_rules.calc_polarizability`. Used if polarizability isn't provided for all beads.
     lower_bounds : list, Optional, default=["rmin","sigma"]
-        Dictates the number of subplots, this represents the method of determining the lower bound for curve fitting in :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+        Dictates the number of subplots, this represents the method of determining the lower bound for curve fitting in :func:`~mapsci.multipole_Mie_combining_rules.calc_distance_array`
     max_factors : list, Optional, default=[1.5,1.75,2,2.25,2.5,3,4]
-        Dictates the number of points in the plot line, this represents the multiple of the lower bound that defines the upper bound in :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+        Dictates the number of points in the plot line, this represents the multiple of the lower bound that defines the upper bound in :func:`~mapsci.multipole_Mie_combining_rules.calc_distance_array`
     savefig : bool, Optional, default=True
         Dictate whether plt.savefig() should be executed within this function
     filename : str, Optional, default="integral_difference.pdf"
@@ -408,16 +422,11 @@ def plot_mie_multipole_integral_difference(beadA, beadB, temperature, polarizabi
                 distance_opts = {"max_factor": factor, "lower_bound": lb}
                 tmp_library = mr.calc_polarizability(bead_library, temperature=temperature, distance_opts=distance_opts, polarizability_opts=polarizability_opts)
 
-                kwargs = {
-                          "title": "{} Pot. Abs. Dev.".format(labels[lb]),
-                          "plot_opts": {"label": "{}".format(factor)}
-                         }
-        
-                beadAB = mr.fit_multipole_cross_interaction_parameter(tmp_library["bead1"], tmp_library["bead2"], distance_dict=distance_opts, temperature=temperature)
+                beadAB = mr.fit_multipole_cross_interaction_parameter(tmp_library["bead1"], tmp_library["bead2"], distance_opts=distance_opts, temperature=temperature)
                 Cmulti, _ = mr.multipole_integral(tmp_library["bead1"], tmp_library["bead2"],  lower_bound=lb, temperature=temperature)
-                Cmie = mr.mie_integral(beadAB, lower_bound=lb)
+                CMie = mr.Mie_integral(beadAB, lower_bound=lb)
         
-                var_array[i].append([Cmulti, Cmie])
+                var_array[i].append([Cmulti, CMie])
 
         var_array = [np.transpose(np.array(var_array[0])), np.transpose(np.array(var_array[1]))]
 
