@@ -10,8 +10,6 @@ import numpy as np
 import scipy.optimize as spo
 import logging
 
-from mapsci.quick_plots import plot_potential, plot_multipole_potential
-
 logger = logging.getLogger(__name__)
 
 
@@ -30,9 +28,9 @@ def calc_distance_array(bead_dict, tol=0.01, max_factor=2, lower_bound="rmin"):
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
 
-    tol : float, Optional, default: 0.01
+    tol : float, Optional, default=0.01
         Ratio of absolute value of repulsive over attractive term of the Mie potential to define minimum bound
-    max_factor : int, Optional, default: 2
+    max_factor : int, Optional, default=2
         Factor to multiply minimum bound by to define maximum bound.
     lower_bound : str, Optional, default='rmin'
         Lower bound of distance array. Can be one of:
@@ -447,11 +445,11 @@ def fit_polarizability(r, bead_dict, temperature=None, nondimensional=False, tol
         Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
     nondimensional : bool, Optional, default=False
         Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
-    tol : float, Optional, default: 0.05
+    tol : float, Optional, default=0.05
         Ratio of variance over polarizability value from curve-fit
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
-    plot_fit : bool, Optional, default: False
+    plot_fit : bool, Optional, default=False
         Plot Mie potential and Multipole potential for comparison.
     
     Returns
@@ -521,7 +519,7 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
 
     r : numpy.ndarray
         Array (or float) of nondimensionalized distance between two beads. Nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
-    plot_fit : bool, Optional, default: False
+    plot_fit : bool, Optional, default=False
         Plot Mie potential and Multipole potential for comparison.
     
     Returns
@@ -540,6 +538,8 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
             bead_dict_new["polarizability"], output["lambdaa"], output["epsilon"]))
 
     if plot_fit:
+        from mapsci.quick_plots import plot_potential, plot_multipole_potential
+
         w_mie = calc_mie_attractive_potential(r, bead_dict_new)
         plot_opts = {"label":"Mie", "color": "k", "linestyle": "--"}
         plot_potential(r, w_mie, plot_opts=plot_opts, show=False)
@@ -578,7 +578,7 @@ def solve_polarizability_integral(sigma0, bead_dict0, shape_factor_scale=False, 
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
 
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     temperature : float, Optional, default=None
         Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
@@ -732,7 +732,7 @@ def calc_cross_multipole_potential(r, multipole_terms, total_only=True):
         Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
     multipole_terms : numpy.ndarray
         This can be either a list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions.
-    total_only : bool, Optional, default: True
+    total_only : bool, Optional, default=True
         If true, only the overall potential is returned. This is useful for parameter fitting. If False, the potential for each term is returned in a numpy array.
     
     Returns
@@ -963,7 +963,7 @@ def partial_energy_parameter(beadA,
         Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
     sigma0 : float, Optional, default=None
         This lower bound of the integral dictates where the lower bound of the definite integral is. Can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     polarizability_opts : dict, Optional, default={}
         Dictionary of keyword arguments used in :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`
@@ -1192,7 +1192,7 @@ def solve_multipole_cross_interaction_integral(sigma0,
 
     multipole_terms : numpy.ndarray, Optional, default=None
         This list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, respectively. If not provided, this quantity will be calculated. These are ALWAYS nondimensionalized
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     beadAB : dict
         Dictionary of mixed Mie parameters for beadA and beadB.
@@ -1291,7 +1291,7 @@ def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, s
         This sum of the multipole integrals is set equal to the attractive term of the integrated Mie potential to determine the energy parameter.
     sigma0 : float
         The lower bound of the integral, can be reported in angstroms or nondimensionalized as :math:`r'=r (4 \pi \epsilon_{0}) 3k_{B}T e^{-2}`
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
 
     Returns
@@ -1393,7 +1393,7 @@ def fit_multipole_cross_interaction_parameter(beadA,
         - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
         - polarizability (float) Polarizability of bead in [angstroms^3] or nondimensionalized with math:`\alpha'=\alpha (4 \pi \epsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
 
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     temperature : float, Optional, default=None
         Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
@@ -1526,7 +1526,7 @@ def log_mie_attractive(r, bead1, bead2, lambda_a=None, Kprefactor=None, epsilon=
         The cross interaction attractive exponent, if not specified the mixing rule from Lafitte 2013 is used
     Kprefactor : float, Optional, default=None
         Total prefactor of Mie potential equal to the energy parameters times the Mie prefactor, C. If not specified, the value using the mixing rules from Lafitte 2013 is used.
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
 
     Returns
@@ -1597,7 +1597,7 @@ def calc_self_mie_from_multipole(bead_dict,
         Assumed repulsive exponent. This quantity can be changed later as long as the energy parameter is scaled accordingly.
     temperature : float, Optional, default=298
         Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
@@ -1684,7 +1684,7 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
 
     temperature : float
         The temperature in [K] of the system
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
@@ -1779,7 +1779,7 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
 
     temperature : float
         The temperature in [K] of the system
-    shape_factor_scale : bool, Optional, default: False
+    shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
     distance_opts : dict, Optional, default={}
         Optional keywords for creating r array used for calculation or fitting 
@@ -1882,9 +1882,9 @@ def dict_dimensions(parameters, temperature, dimensions=True, conv_custom={}):
 
     temperature : float
         The temperature of the system
-    dimensions : bool, Optional, default: True
+    dimensions : bool, Optional, default=True
         If true, will add SI-units to multipole parameters, if False, will nondimensionalize. 
-    conv_custom : dict, Optional, default: {}
+    conv_custom : dict, Optional, default={}
         This dictionary may have the same parameter names used for the beads and overwrite default values.
 
     Returns
@@ -1980,9 +1980,9 @@ def float_dimensions(parameter, parameter_type, temperature, dimensions=True, co
     
     temperature : float
         The temperature of the system
-    dimensions : bool, Optional, default: True
+    dimensions : bool, Optional, default=True
         If true, will add SI-units to multipole parameters, if False, will nondimensionalize.
-    conv_custom : dict, Optional, default: {}
+    conv_custom : dict, Optional, default={}
         This dictionary may have the same parameter names used for the beads and overwrite default values.
     
     Returns
