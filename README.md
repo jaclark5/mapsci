@@ -20,7 +20,7 @@ MAPSCI is an importable package that can be used to estimate cross-interaction p
 How do I use it?
 ----------------
 Once installed, you can:
- * Import the package and use it in a python script. We have provided helpful functions to organize your data. Be aware that the parameters are temperature dependent.
+ * Import the package and use it in a python script. Note that the parameters are temperature dependent.
  * This package can be used as a plug-in for our equation of state package, [DESPASITO](https://github.com/jaclark5/despasito). You won't need to worry about temperature dependence in this case, it'll be taken care of internally.
 Check out our [documentation](https://mapsci.readthedocs.io) for more information.
 

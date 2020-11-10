@@ -20,13 +20,13 @@ import os
 logger = logging.getLogger()
 logger.setLevel(30)
 
-def initiate_logger(console=False, log_file=None, verbose=30):
+def initiate_logger(console=None, log_file=None, verbose=30):
     """
-    Initiate a logging handler if more detail on the calculations is desired.
+    Initiate a logging handler if more detail on the calculations is desired. If a handler of the given type is already present, nothing is done. If either handler is given a value of False, the handler of that type is removed. 
 
     Parameters
     ----------
-    console : bool, Optional, default=False
+    console : bool, Optional, default=None
         Initiates a stream handler to print to a console
     log_file : bool/str, Optional, default=None
         If log output should be recorded in a file, set this keyword to either True or to a name for the log file. If True, the file name 'mapsci.log' is used. Note that if a file with the same name already exists, it will be deleted.
@@ -53,7 +53,7 @@ def initiate_logger(console=False, log_file=None, verbose=30):
         logger.addHandler(console_handler)
     elif console:
         logger.warning("StreamHandler already exists")
-    elif handler_console != None:
+    elif handler_console == False:
         logger.removeHandler(handler_console)
 
     # Rotating File Handler
@@ -71,6 +71,6 @@ def initiate_logger(console=False, log_file=None, verbose=30):
         logger.addHandler(log_file_handler)
     elif log_file:
         logger.warning("RotatingFileHandler already exists")
-    elif handler_logfile != None:
+    elif handler_logfile == False:
         logger.removeHandler(handler_logfile)
 

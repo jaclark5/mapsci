@@ -5,6 +5,7 @@ API Documentation
 .. autosummary::
    :toctree: _autosummary
 
-   initiate_logger
    multipole_mie_combining_rules
+   quick_plots
+   initiate_logger
 
