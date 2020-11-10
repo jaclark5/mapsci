@@ -8,6 +8,7 @@ import pytest
 import sys
 import os
 import logging
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -25,18 +26,16 @@ def test_mapsci_imported():
 def test_mapsci_log_file():
     """Test enabling of logging"""
  
-    mapsci.initiate_logger(log_file=True, verbose=10)
-
-    logger = logging.getLogger(__name__)
+    fname = "mapsci_{}.log".format(random.randint(1,10))
+    mapsci.initiate_logger(log_file=fname, verbose=10)
     logger.info("test")
 
-    if os.path.isfile("mapsci.log"):
+    if os.path.isfile(fname):
         flag = True
-        os.remove("mapsci.log")
+        mapsci.initiate_logger(log_file=False)
+        os.remove(fname)
     else:
         flag = False
-
-    mapsci.initiate_logger(log_file=False)
 
     assert flag
 
@@ -44,13 +43,12 @@ def test_mapsci_log_console(capsys):
     """Test enabling of logging"""
 
     mapsci.initiate_logger(console=True, verbose=10)
-
-    logger = logging.getLogger(__name__)
     logger.info("test")
 
     _, err = capsys.readouterr()
 
     mapsci.initiate_logger(console=False)
+
     assert "[INFO](mapsci.tests.test_mapsci): test" in err
 
 def test_polarizability_analytical(bead_library=bead_library["CO2"], temperature=temperature):

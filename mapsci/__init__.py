@@ -36,14 +36,28 @@ def initiate_logger(console=False, log_file=None, verbose=30):
 
     logger.setLevel(verbose)
 
-    if console:
-        # Set up logging to console
+    # Check for existing handlers
+    handler_console = None
+    handler_logfile = None
+    for tmp in logger.handlers:
+        if "RotatingFileHandler" in str(tmp):
+            handler_logfile = tmp
+        if "StreamHandler" in str(tmp):
+            handler_console = tmp
+
+    # Set up logging to console
+    if console and handler_console == None:
         console_handler = logging.StreamHandler() # sys.stderr
         console_handler.setFormatter( logging.Formatter('[%(levelname)s](%(name)s): %(message)s') )
         console_handler.setLevel(verbose)
         logger.addHandler(console_handler)
+    elif console:
+        logger.warning("StreamHandler already exists")
+    elif handler_console != None:
+        logger.removeHandler(handler_console)
 
-    if log_file is not None:
+    # Rotating File Handler
+    if log_file is not None and handler_logfile == None:
         
         if type(log_file) != str:
             log_file = "mapsci.log"
@@ -55,3 +69,8 @@ def initiate_logger(console=False, log_file=None, verbose=30):
         log_file_handler.setFormatter( logging.Formatter('%(asctime)s [%(levelname)s](%(name)s:%(funcName)s:%(lineno)d): %(message)s') )
         log_file_handler.setLevel(verbose)
         logger.addHandler(log_file_handler)
+    elif log_file:
+        logger.warning("RotatingFileHandler already exists")
+    elif handler_logfile != None:
+        logger.removeHandler(handler_logfile)
+
