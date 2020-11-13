@@ -55,6 +55,7 @@ def initiate_logger(console=None, log_file=None, verbose=30):
     elif console:
         logger.warning("StreamHandler already exists")
     elif handler_console == False:
+        handler_console.close()
         logger.removeHandler(handler_console)
 
     # Rotating File Handler
@@ -73,5 +74,6 @@ def initiate_logger(console=None, log_file=None, verbose=30):
     elif log_file:
         logger.warning("RotatingFileHandler already exists")
     elif handler_logfile == False:
+        handler_logfile.close()
         logger.removeHandler(handler_logfile)
 
