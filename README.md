@@ -1,6 +1,7 @@
 MAPSCI
 ==============================
 [//]: # (Badges)
+[![DOI](https://zenodo.org/badge/289346262.svg)](https://zenodo.org/badge/latestdoi/289346262)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![Travis Build Status](https://travis-ci.org/jaclark5/MAPSCI.svg?branch=master)](https://travis-ci.org/jaclark5/MAPSCI)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/m9p1qg5y1aq0swd6/branch/master?svg=true)](https://ci.appveyor.com/project/jaclark5/MAPSCI/branch/master)
