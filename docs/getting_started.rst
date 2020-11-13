@@ -10,7 +10,7 @@ Once installed, you can:
 Installation
 ------------
 
-Install using pip with ``pip install -i https://test.pypi.org/simple/ mapsci``
+Install using pip with ``pip install mapsci``
 
 Alternatively, download the master branch from our github page as a zip file, or clone it with git via ``git clone https://github.com/jaclark5/mapsci`` in your working directory. Install MAPSCI locally from the working directory with ``python setup.py install --user``.
 
