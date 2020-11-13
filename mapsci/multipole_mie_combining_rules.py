@@ -1,6 +1,5 @@
 """
 
-
 MAPSCI: Multipole Approach of Predicting and Scaling Cross Interactions
 
 Handles the primary functions
@@ -82,7 +81,7 @@ def mie_potential_minimum(bead_dict):
     return bead_dict["sigma"] * (bead_dict["lambdar"] / bead_dict["lambdaa"])**(1 / (bead_dict["lambdar"] - bead_dict["lambdaa"]))
 
 
-def mixed_parameters(bead1, bead2):
+def mie_combining_rules(bead1, bead2):
     r"""
     Calculate basic mixed parameters, where the energy parameter is calculated with the geometric mean
 
@@ -126,9 +125,9 @@ def mixed_parameters(bead1, bead2):
     return beadAB
 
 
-def calc_mie_attractive_potential(r, bead_dict):
+def calc_mie_attractive_potential(r, bead_dict, shape_factor_scale=False):
     r"""
-    Calculation of nondimensionalized Mie potential.
+    Calculation of attractive Mie potential.
 
     Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
     
@@ -144,6 +143,9 @@ def calc_mie_attractive_potential(r, bead_dict):
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
         - Sk (float) Shape factor
+
+    shape_factor_scale : bool, Optional, default=False
+        Scale energy parameter based on shape factor epsilon*Si*Sj
     
     Returns
     -------
@@ -151,8 +153,53 @@ def calc_mie_attractive_potential(r, bead_dict):
         Array of nondimensionalized potential between beads from Mie potential. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)`
     """
 
+    if shape_factor_scale:
+        if "Sk" in bead_dict:
+            bead_dict["epsilon"] = bead_dict["epsilon"] * bead_dict["Sk"]**2
+        else:
+            raise ValueError("Shape factor was not provided in bead dictionary")
+
     potential = -prefactor(bead_dict["lambdar"], bead_dict["lambdaa"]) * bead_dict["epsilon"] * (bead_dict["sigma"] /
                                                                                          r)**bead_dict["lambdaa"]
+
+    return potential
+
+def calc_mie_repulsive_potential(r, bead_dict, shape_factor_scale=False):
+    r"""
+    Calculation of repulsive Mie potential.
+
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+    
+    Parameters
+    ----------
+    r : numpy.ndarray
+        Array (or float) in either [Å] or nondimensionalized distance between two beads. :math:`r'=r (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`, whatever is consistent with 'bead_dict'
+    bead_dict : dict
+        Dictionary of multipole parameters for bead_A.
+
+        - epsilon (float) Energy parameter scaled by :math:`k_{B}` in [K], or nondimensionalized as :math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [Å], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
+        - lambdar (float) Repulsive exponent
+        - lambdaa (float) Attractive exponent
+        - Sk (float) Shape factor
+
+    shape_factor_scale : bool, Optional, default=False
+        Scale energy parameter based on shape factor epsilon*Si*Sj
+    
+    Returns
+    -------
+    potential : numpy.ndarray
+        Array of nondimensionalized potential between beads from Mie potential. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)`
+    """
+
+    if shape_factor_scale:
+        if "Sk" in bead_dict:
+            bead_dict["epsilon"] = bead_dict["epsilon"] * bead_dict["Sk"]**2
+        else:
+            raise ValueError("Shape factor was not provided in bead dictionary")
+
+    potential = prefactor(bead_dict["lambdar"], bead_dict["lambdaa"]) * bead_dict["epsilon"] * (bead_dict["sigma"] /
+                                                                                         r)**bead_dict["lambdar"]
 
     return potential
 
@@ -337,7 +384,7 @@ def calc_self_multipole_potential(r, polarizability, bead_dict, temperature=None
 
     return potential
 
-def calc_polarizability(bead_library, temperature=None, distance_opts={}, calculation_method="fit", polarizability_opts={}, nondimensional=False):
+def calc_polarizability(bead_library, temperature=None, distance_opts={}, calculation_method="fit", polarizability_opts={}, nondimensional=False, shape_factor_scale=False):
     r"""
     Calculation of polarizability for beads in the provided library that do not have one calculated. The multipole moments and Mie parameters must be provided for this purpose.
     
@@ -367,6 +414,8 @@ def calc_polarizability(bead_library, temperature=None, distance_opts={}, calcul
         Dictionary of keyword arguments for :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.solve_polarizability_integral`
     nondimensional : bool, Optional, default=False
         Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+    shape_factor_scale : bool, Optional, default=False
+        Scale energy parameter based on shape factor epsilon*Si*Sj
     
     Returns
     -------
@@ -467,24 +516,22 @@ def fit_polarizability(r, bead_dict, temperature=None, nondimensional=False, tol
     else:
         bead_dict_new = bead_dict.copy()
 
-    if shape_factor_scale and "Sk" in bead_dict_new:
-        bead_dict_new["epsilon"] = bead_dict_new["epsilon"] * bead_dict_new["Sk"]**2
-    
-    w_mie = calc_mie_attractive_potential(r, bead_dict_new)
+    w_mie = calc_mie_attractive_potential(r, bead_dict_new, shape_factor_scale=shape_factor_scale)
 
     p0 = [1.e-6]
     pol_tmp, var_matrix = spo.curve_fit(
         lambda x, a: calc_self_multipole_potential(x,
                                                    a,
                                                    bead_dict_new,
-                                                   nondimensional=True),
+                                                   nondimensional=True,
+                                                   ),
         r,
         w_mie,
         p0=p0,
         bounds=(0.0, np.inf))
 
     if np.diag(var_matrix) / pol_tmp > tol:
-        _ = test_polarizability(pol_tmp, bead_dict_new, r, plot_fit=plot_fit)
+        _ = test_polarizability(pol_tmp, bead_dict_new, r, plot_fit=plot_fit, shape_factor_scale=shape_factor_scale)
 
     polarizability = pol_tmp[0]
     pol_variance = var_matrix[0][0]
@@ -495,7 +542,7 @@ def fit_polarizability(r, bead_dict, temperature=None, nondimensional=False, tol
 
     return polarizability, pol_variance
 
-def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
+def test_polarizability(polarizability, bead_dict, r, plot_fit=False, shape_factor_scale=False):
     r"""
     If polarizability doesn't provide a good fit between multipole potential and Mie potential, use estimated polarizability to suggest a different attractive exponent and energy parameter.
     
@@ -531,7 +578,11 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
     bead_dict_new = bead_dict.copy()
 
     bead_dict_new["polarizability"] = polarizability
-    output = fit_multipole_cross_interaction_parameter(bead_dict_new, bead_dict_new, distance_array=r, nondimensional=True)
+    output = fit_multipole_cross_interaction_parameter(bead_dict_new, 
+                                                       bead_dict_new, 
+                                                       distance_array=r, 
+                                                       nondimensional=True, 
+                                                       shape_factor_scale=shape_factor_scale)
 
     logger.warning(
         "Refitting attractive exponent with estimated polarizability of {} yields: lamba_a {}, epsilon {}".format(
@@ -540,13 +591,13 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
     if plot_fit:
         from mapsci.quick_plots import plot_potential, plot_multipole_potential
 
-        w_mie = calc_mie_attractive_potential(r, bead_dict_new)
+        w_mie = calc_mie_attractive_potential(r, bead_dict_new, shape_factor_scale=shape_factor_scale)
         plot_opts = {"label":"Mie", "color": "k", "linestyle": "--"}
         plot_potential(r, w_mie, plot_opts=plot_opts, show=False)
 
         bead_dict_plot = bead_dict_new.copy()
         bead_dict_plot.update({"epsilon": output["epsilon"], "lambdaa": output["lambdaa"]})
-        w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot)
+        w_mie_fit = calc_mie_attractive_potential(r, bead_dict_plot, shape_factor_scale=shape_factor_scale)
         plot_opts = {"label":"Mie fit", "color": "r", "linestyle": "--"}
         plot_potential(r, w_mie_fit, plot_opts=plot_opts, show=False)
 
@@ -554,7 +605,7 @@ def test_polarizability(polarizability, bead_dict, r, plot_fit=False):
         tmp = ["charge-dipole", "charge-induced_dipole", "induced_dipole-induced_dipole", "dipole-dipole", "dipole-induced_dipole", "charge-quadrupole", "dipole-quadrupole", "induced_dipole-quadrupole", "quadrupole-quadrupole"]
         logger.debug(("{}: {{{}}}\n"*len(tmp)).format(*[val for val in tmp for _ in range(2)]).format(**dict(zip(tmp,A)))) 
 
-        potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
+        potential, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False, nondimensional=True)
         plot_multipole_potential(r, potential, potential_terms=potential_terms)
 
     return output["epsilon"]
@@ -599,15 +650,7 @@ def solve_polarizability_integral(sigma0, bead_dict0, shape_factor_scale=False, 
     else:
         bead_dict = bead_dict0.copy()
 
-    if shape_factor_scale:
-        if "Sk" in bead_dict:
-            bead_dict["epsilon"] = bead_dict["epsilon"] * bead_dict["Sk"]**2
-        else:
-            raise ValueError("Shape factor was not provided in bead dictionary")
-
-
-    Cmie_int = mie_integral(bead_dict, sigma0=sigma0)
-
+    Cmie_int = mie_integral(bead_dict, sigma0=sigma0, shape_factor_scale=shape_factor_scale)
     tmp1 = _obj_polarizability_from_integral(np.finfo("float").eps, bead_dict, Cmie_int, sigma0)
     tmp2 = _obj_polarizability_from_integral(1, bead_dict, Cmie_int, sigma0)
     if tmp1 * tmp2 < 0:
@@ -720,7 +763,7 @@ def condense_multipole_terms(multipole_terms):
     return new_multipole_terms
 
 
-def calc_cross_multipole_potential(r, multipole_terms, total_only=True):
+def calc_cross_multipole_potential(r, multipole_terms, nondimensional=False, temperature=None, total_only=True):
     r"""
     Calculation of nondimensionalized cross-interaction potential from multipole moments.
     
@@ -732,15 +775,19 @@ def calc_cross_multipole_potential(r, multipole_terms, total_only=True):
         Array (or float) of nondimensionalized distance between two beads. :math:`r'=r (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
     multipole_terms : numpy.ndarray
         This can be either a list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions.
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
     total_only : bool, Optional, default=True
         If true, only the overall potential is returned. This is useful for parameter fitting. If False, the potential for each term is returned in a numpy array.
     
     Returns
     -------
     potential : numpy.ndarray
-        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)`
+        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". :math:`\phi'=\phi/(3k_{B}T)` or in kcal/mol
     potential_terms : numpy.ndarray, Optional
-        2D array of terms involved in multipole moment. Could be 4 terms relating to orders of r from -4 to -10 by steps of 2, or could be the individual contributions.
+        2D array of terms involved in multipole moment. Could be 4 terms relating to orders of r from -4 to -10 by steps of 2, or could be the individual contributions. Either dimensionalized or in kcal/mol
         Only provided if ``total_only`` is False
     """
 
@@ -760,6 +807,10 @@ def calc_cross_multipole_potential(r, multipole_terms, total_only=True):
             "Multipole terms input should be either of length 4 or length 9 for the supported interaction types.")
 
     potential = np.sum(potential_terms, axis=0)
+
+    if not nondimensional:
+        potential = float_dimensions(potential, "ionization_energy", temperature)
+        potential_terms = float_dimensions(potential_terms, "ionization_energy", temperature)
 
     if total_only:
         return potential
@@ -997,7 +1048,7 @@ def partial_energy_parameter(beadA,
                                     polarizability_opts=polarizability_opts,
                                     nondimensional=True)
 
-    beadAB = mixed_parameters(bead1, bead2)
+    beadAB = mie_combining_rules(bead1, bead2)
 
     if sigma0 is None:
         if lower_bound == "rmin":
@@ -1062,7 +1113,7 @@ def partial_energy_parameter(beadA,
 
 def multipole_integral(beadA, beadB, sigma0=None, lower_bound="rmin", multipole_terms=None, temperature=None, nondimensional=False):
     r"""
-    Calculate the integral of the multipole potential from a given minimum to infinity.
+    Calculate the integral of the multipole potential from a given minimum to infinity. Units in those of :math:`\epsilon/\sigma^3`
 
     Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
 
@@ -1124,7 +1175,7 @@ def multipole_integral(beadA, beadB, sigma0=None, lower_bound="rmin", multipole_
         bead2 = beadB.copy()
 
     if sigma0 == None:
-        bead_dict = mixed_parameters(bead1, bead2)
+        bead_dict = mie_combining_rules(bead1, bead2)
         if lower_bound == "rmin":
             sigma0 = mie_potential_minimum(bead_dict)
         elif lower_bound == "sigma":
@@ -1148,7 +1199,7 @@ def multipole_integral(beadA, beadB, sigma0=None, lower_bound="rmin", multipole_
     Cmultipole = np.sum(multipole_int_terms0)
 
     if not nondimensional:
-        for tmp in ["ionization_energy", "sigma", "sigma", "sigma"]:
+        for tmp in ["epsilon", "sigma", "sigma", "sigma"]:
             Cmultipole = float_dimensions(Cmultipole,tmp,temperature,dimensions=True)
             multipole_int_terms0 = float_dimensions(multipole_int_terms0,tmp,temperature,dimensions=True)
 
@@ -1210,7 +1261,7 @@ def solve_multipole_cross_interaction_integral(sigma0,
     Returns
     -------
     epsilon : float
-        Cross interaction parameter from analytical solution of extended mixing rules. Array is equal in length to "r". Either in reduced units :math:`C_{multi}'=C_{multi}/k_{B}` or dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
+        Cross interaction parameter from analytical solution of extended combining rules. Array is equal in length to "r". Either in reduced units :math:`C_{multi}'=C_{multi}/k_{B}` or dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
     multipole_int_terms : numpy.ndarray
         This list of terms corresponds to the terms involved in calculation of the energy parameter, epsilon. Adding these terms together produces the attractive term of the Mie potential, from which the energy parameter can be derived. Always dimensionless :math:`C_{multi}'=C_{multi}/(3k_{B}T)`
     """
@@ -1226,7 +1277,7 @@ def solve_multipole_cross_interaction_integral(sigma0,
         bead2 = beadB.copy()
 
     if beadAB is None:
-        beadAB_new = mixed_parameters(bead1, bead2)
+        beadAB_new = mie_combining_rules(bead1, bead2)
     else:
         if not nondimensional:
             beadAB_new = dict_dimensions(beadAB.copy(), temperature, dimensions=False)
@@ -1251,7 +1302,7 @@ def solve_multipole_cross_interaction_integral(sigma0,
 
     return epsilon, multipole_int_terms0
 
-def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, sigma0, shape_factor_scale):
+def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, sigma0, shape_factor_scale=False):
     r"""
     Objective function used to fit energy parameter to integral of multipole moment
 
@@ -1300,17 +1351,14 @@ def _obj_energy_parameter_from_integral(eps0, beadA, beadB, beadAB, Cintegral, s
         Difference between multipole term and Mie potential term integral
     """
 
-    Cint = mie_integral(beadAB, sigma0=sigma0)
-
-    if shape_factor_scale:
-        Cint = Cint * beadA["Sk"] * beadB["Sk"]
+    Cint = mie_integral(beadAB, sigma0=sigma0, shape_factor_scale=shape_factor_scale)
 
     return eps0 * Cint / beadAB["epsilon"] - Cintegral
 
 
-def mie_integral(beadAB, sigma0=None, lower_bound="rmin"):
+def mie_integral(beadAB, sigma0=None, lower_bound="rmin", shape_factor_scale=False):
     r"""
-    Calculate the integral of the attractive term in the Mie potential from the given minimum value to infinity.
+    Calculate the integral of the attractive term in the Mie potential from the given minimum value to infinity. Units in those of :math:`\epsilon/\sigma^3`
 
     Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
     
@@ -1332,6 +1380,9 @@ def mie_integral(beadAB, sigma0=None, lower_bound="rmin"):
         - rmin: the position of the potential well
         - sigma: the size parameter
 
+    shape_factor_scale : bool, Optional, default=False
+        Scale energy parameter based on shape factor epsilon*Si*Sj
+
     Returns
     -------
     Cintegral : float
@@ -1346,6 +1397,12 @@ def mie_integral(beadAB, sigma0=None, lower_bound="rmin"):
             sigma0 = mie_potential_minimum(beadAB)
         elif lower_bound == "sigma":
             sigma0 = beadAB["sigma"]
+
+    if shape_factor_scale:
+        if "Sk" in beadAB:
+            beadAB["epsilon"] = beadAB["epsilon"] * beadAB["Sk"]**2
+        else:
+            raise ValueError("Shape factor was not provided in bead dictionary")
 
     integral = -4 * np.pi * beadAB["epsilon"] * prefactor(
         beadAB["lambdar"],
@@ -1432,7 +1489,7 @@ def fit_multipole_cross_interaction_parameter(beadA,
         bead2 = beadB.copy()
 
     # Set-up Mie parameters
-    beadAB = mixed_parameters(bead1, bead2)
+    beadAB = mie_combining_rules(bead1, bead2)
     Cmie = prefactor(beadAB["lambdar"], beadAB["lambdaa"])
     if shape_factor_scale:
         if "Sk" not in beadA:
@@ -1447,9 +1504,10 @@ def fit_multipole_cross_interaction_parameter(beadA,
         r = calc_distance_array(beadAB, **distance_opts)
     else:
         r = distance_array
-    w_multipole, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
 
-    # ___________ VDW parameter mixing _______________
+    w_multipole, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False, nondimensional=True)
+
+    # ___________ VDW parameter combining _______________
     params, var_matrix = spo.curve_fit(lambda x, K, lambdaa: log_mie_attractive(
         r, bead1, bead2, lambda_a=lambdaa, Kprefactor=K, shape_factor_scale=shape_factor_scale),
                                        r,
@@ -1521,11 +1579,11 @@ def log_mie_attractive(r, bead1, bead2, lambda_a=None, Kprefactor=None, epsilon=
         - Sk (float) Shape factor
 
     epsilon : float, Optional, default=None
-        The energy parameter for the Mie potential, if not specified the mixing rule from `Lafitte 2013 <https://doi.org/10.1063/1.4819786>`_ is used
+        The energy parameter for the Mie potential, if not specified the combining rule from `Lafitte 2013 <https://doi.org/10.1063/1.4819786>`_ is used
     lambda_a : float, Optional, default=None
-        The cross interaction attractive exponent, if not specified the mixing rule from `Lafitte 2013 <https://doi.org/10.1063/1.4819786>`_ is used
+        The cross interaction attractive exponent, if not specified the combining rule from `Lafitte 2013 <https://doi.org/10.1063/1.4819786>`_ is used
     Kprefactor : float, Optional, default=None
-        Total prefactor of Mie potential equal to the energy parameters times the Mie prefactor, C. If not specified, the value using the mixing rules from `Lafitte 2013 <https://doi.org/10.1063/1.4819786>`_ is used.
+        Total prefactor of Mie potential equal to the energy parameters times the Mie prefactor, C. If not specified, the value using the combining rules from `Lafitte 2013 <https://doi.org/10.1063/1.4819786>`_ is used.
     shape_factor_scale : bool, Optional, default=False
         Scale energy parameter based on shape factor epsilon*Si*Sj
 
@@ -1535,25 +1593,25 @@ def log_mie_attractive(r, bead1, bead2, lambda_a=None, Kprefactor=None, epsilon=
         The potential array for the given value of epsilon
     """
 
-    beadAB = mixed_parameters(bead1, bead2)
+    beadAB = mie_combining_rules(bead1, bead2)
     sigma = beadAB["sigma"]
     lambda_r = beadAB["lambdar"]
 
     if epsilon is not None and lambda_a is not None:
-        # Assume lambdar follows normal mixing rules
+        # Assume lambdar follows normal combining rules
         Kprefactor = epsilon * prefactor(lambda_r, lambda_a)
     elif epsilon is not None and Kprefactor is not None:
         raise ValueError("Specifying 'epsilon' and 'Kprefactor' is redundant.")
     elif epsilon is not None:
-        # Assume both exponents follow normal mixing rules
+        # Assume both exponents follow normal combining rules
         lambda_a = beadAB["lambdaa"]
         Kprefactor = epsilon * prefactor(lambda_r, lambda_a)
     elif lambda_a is not None and Kprefactor is None:
-        # Assume lambdar follows normal mixing rules, epsilon can be derived from 1 fluid mixing rule
+        # Assume lambdar follows normal combining rules, epsilon can be derived from 1 fluid combining rule
         epsilon = calc_epsilonij_from_lambda_aij(lambda_a, bead1, bead2)
         Kprefactor = epsilon * prefactor(lambda_r, lambda_a)
     elif lambda_a is None and Kprefactor is not None:
-        # Assume lambdaa follows normal mixing rules
+        # Assume lambdaa follows normal combining rules
         lambda_a = beadAB["lambdaa"]
 
     if shape_factor_scale:
@@ -1631,6 +1689,7 @@ def calc_self_mie_from_multipole(bead_dict,
 
     if "polarizability" not in bead_dict_new:
         logger.debug("Calculating polarizability")
+        polarizability_opts.update({"shape_factor_scale":shape_factor_scale})
         bead_dict_new = calc_polarizability(bead_dict_new, distance_opts=distance_opts, calculation_method="fit", polarizability_opts=polarizability_opts, nondimensional=True)
 
     multipole_terms = calc_cross_multipole_terms(bead_dict_new, bead_dict_new, nondimensional=True)
@@ -1638,7 +1697,7 @@ def calc_self_mie_from_multipole(bead_dict,
         r = calc_distance_array(bead_dict_new, **distance_opts)
     else:
         r = distance_array
-    w_multipole, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False)
+    w_multipole, potential_terms = calc_cross_multipole_potential(r, multipole_terms, total_only=False, nondimensional=True)
 
     Cmie = prefactor(bead_dict_new["lambdar"], bead_dict_new["lambdaa"])
     params, var_matrix = spo.curve_fit(lambda x, K, lambdaa: log_mie_attractive(
@@ -1663,7 +1722,7 @@ def calc_self_mie_from_multipole(bead_dict,
 
     return bead_dict_new
 
-def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=False, distance_opts={}, polarizability_opts={}):
+def extended_combining_rules_fitting(bead_library, temperature, shape_factor_scale=False, distance_opts={}, polarizability_opts={}):
     r"""
     Calculate and output the cross-interaction parameters for the provided dictionary of beads utilizing the Mie potential.
 
@@ -1676,7 +1735,7 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
         - sigma (float) [Å] Size parameter
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) [:math:`Å^3`] This quantity is used as a free parameter in mixing rule
+        - polarizability (float) [:math:`Å^3`] This quantity is used as a free parameter in combining rule
         - charge (float) [-] Charge of bead fragment in elementary charges
         - dipole (float) [Debye] Dipole moment of bead fragment
         - quadrupole (float) [Debye*Å] Quadrupole moment of bead fragment
@@ -1758,7 +1817,7 @@ def extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=
     return dict_cross, dict_summary
 
 
-def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_scale=False, distance_opts={}, polarizability_opts={}):
+def extended_combining_rules_analytical(bead_library, temperature, shape_factor_scale=False, distance_opts={}, polarizability_opts={}):
     r"""
     Calculate and output the cross-interaction energy parameter for the provided dictionary of beads utilizing the Mie potential, using the Analytical (i.e. integral) method
 
@@ -1771,7 +1830,7 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
         - sigma (float) [Å] Size parameter
         - lambdar (float) Repulsive exponent
         - lambdaa (float) Attractive exponent
-        - polarizability (float) [:math:`Å^3`] This quantity is used as a free parameter in mixing rule
+        - polarizability (float) [:math:`Å^3`] This quantity is used as a free parameter in combining rule
         - charge (float) [-] Charge of bead fragment in elementary charges
         - dipole (float) [Debye] Dipole moment of bead fragment
         - quadrupole (float) [Debye*Å] Quadrupole moment of bead fragment
@@ -1825,7 +1884,7 @@ def extended_mixing_rules_analytical(bead_library, temperature, shape_factor_sca
             dict_summary[bead1] = {}
             for bead2 in beads[i + 1:]:
                 beadB = bead_library_new[bead2]
-                beadAB = mixed_parameters(beadA, beadB)
+                beadAB = mie_combining_rules(beadA, beadB)
                 r = calc_distance_array(beadAB, **distance_opts)
                 epsilon_tmp, terms = solve_multipole_cross_interaction_integral(r[0],
                                                                                 beadA,
@@ -1990,6 +2049,9 @@ def float_dimensions(parameter, parameter_type, temperature, dimensions=True, co
     new_parameter : float
         Converted parameter
     """
+
+    if temperature == None or np.isnan(temperature):
+        raise ValueError("Temperature must be a real number, given {}.".format(temperature))
 
     # Nondimensionalize Parameters
     C_l = 1e+10  # [Ang/m]

@@ -12,8 +12,8 @@ This package can be a "black box" in thermodynamics calculations achieved with `
 
 - :func:`~mapsci.multipole_mie_combining_rules.calc_polarizability`
 - :func:`~mapsci.multipole_mie_combining_rules.calc_self_mie_from_multipole`
-- :func:`~mapsci.multipole_mie_combining_rules.extended_mixing_rules_fitting`
-- :func:`~mapsci.multipole_mie_combining_rules.extended_mixing_rules_analytical`
+- :func:`~mapsci.multipole_mie_combining_rules.extended_combining_rules_fitting`
+- :func:`~mapsci.multipole_mie_combining_rules.extended_combining_rules_analytical`
 
 These and other functions are defined in the API documentation. There, the quick_plots module contains optional tools to visualize the theory that is package contains. Lastly, the default behavior of this package is to not share calculation details with logging, although this capability can be enabled with the :func:`~mapsci.initiate_logger` utility.
 
@@ -23,6 +23,7 @@ These and other functions are defined in the API documentation. There, the quick
 
    getting_started
    api
+   mapsci_example/mapsci_example
 
 
 Indices and tables

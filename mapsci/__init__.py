@@ -5,6 +5,7 @@ MAPSCI: Multipole Approach of Predicting and Scaling Cross Interactions
 
 # Add imports here
 from .multipole_mie_combining_rules import *
+from .quick_plots import *
 
 # Handle versioneer
 from ._version import get_versions

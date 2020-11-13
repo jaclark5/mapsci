@@ -77,7 +77,7 @@ def test_partial_polarizability(bead_library=bead_library["CO2"], temperature=te
 
 def test_curve_fit_cross_interactions(bead_library=bead_library, temperature=temperature):
     #   """Test ability to calculate cross interaction parameters"""
-    dict_cross, _ = mapsci.extended_mixing_rules_fitting(bead_library, temperature, shape_factor_scale=True)
+    dict_cross, _ = mapsci.extended_combining_rules_fitting(bead_library, temperature, shape_factor_scale=True)
     eps = dict_cross["CO2"]["CH3"]["epsilon"]
     lambdaa = dict_cross["CO2"]["CH3"]["lambdaa"]
     lambdar = dict_cross["CO2"]["CH3"]["lambdar"]
@@ -85,7 +85,7 @@ def test_curve_fit_cross_interactions(bead_library=bead_library, temperature=tem
 
 def test_analytical_cross_interactions(bead_library=bead_library, temperature=temperature):
     #   """Test ability to calculate cross interaction parameters"""
-    dict_cross, _ = mapsci.extended_mixing_rules_analytical(bead_library, temperature, distance_opts={"lower_bound": "sigma"})
+    dict_cross, _ = mapsci.extended_combining_rules_analytical(bead_library, temperature, distance_opts={"lower_bound": "sigma"})
 
     eps = dict_cross["CO2"]["CH3"]["epsilon"]
     assert eps==pytest.approx(279.13,abs=1e-2)

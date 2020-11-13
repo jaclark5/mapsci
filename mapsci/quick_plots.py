@@ -2,7 +2,7 @@
 import numpy as np
 import mapsci.multipole_mie_combining_rules as mr
 
-def plot_multipole_potential(r, potential, potential_terms=None, show=True):
+def plot_multipole_potential(r, potential, potential_terms=None, nondimensional=False, temperature=None, show=True, plot_opts={}):
     r"""
     Plot multipole potential and if provided, the contribution of each multipole interaction.
     
@@ -16,61 +16,10 @@ def plot_multipole_potential(r, potential, potential_terms=None, show=True):
         Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". Reported in nondimensionalized :math:`\phi'=\phi/(3k_{B}T)`
     potential_terms : numpy.ndarray
         This can be either a list of terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions. Calculated from :func:`~mapsci.multipole_mie_combining_rules.calc_cross_multipole_terms`
-    show : bool, Optional, default=True
-        Dictate whether plt.show() should be executed within this function
-    """
-
-    try:
-        import matplotlib.pyplot as plt
-        plot_fit = True
-    except:
-        logger.error("Package matplotlib is not available")
-        plot_fit = False
-
-    if plot_fit:
-        plt.figure(1, figsize=(4, 4))
-        plt.xlabel("Dimensionless Distance")
-        plt.ylabel("Dimensionless Potential")
-
-        plt.plot(r, potential, label="Total")
-        if potential_terms is not None:
-            if np.shape(potential_terms)[0] == 4:
-                plt.plot(r, potential_terms[0], label="O(-4)")
-                plt.plot(r, potential_terms[1], label="O(-6)")
-                plt.plot(r, potential_terms[2], label="O(-8)")
-                plt.plot(r, potential_terms[3], label="O(-10)")
-            elif np.shape(potential_terms)[0] == 9:
-                # dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole
-                plt.plot(r, potential_terms[0], label=r"$q-\mu$")
-                plt.plot(r, potential_terms[1], label=r"$q-\mu_{induced}$")
-                plt.plot(r, potential_terms[2], label=r"$\mu_{induced}-\mu_{induced}$")
-                plt.plot(r, potential_terms[3], label=r"$\mu-\mu$")
-                plt.plot(r, potential_terms[4], label=r"$\mu-\mu_{induced}$")
-                plt.plot(r, potential_terms[5], label=r"$q-Q$")
-                plt.plot(r, potential_terms[6], label=r"$\mu-Q$")
-                plt.plot(r, potential_terms[7], label=r"$\mu_{induced}-Q$")
-                plt.plot(r, potential_terms[8], label=r"$Q-Q$")
-            else:
-                raise ValueError(
-                    "Multipole terms input should be either of length 4 or length 9 for the supported interaction types.")
-            plt.legend(loc="best")
-
-        plt.tight_layout()
-        if show:
-            plt.show()
-
-def plot_potential(r, potential, plot_opts={}, show=True):
-    r"""
-    Plot given potential
-    
-    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
-
-    Parameters
-    ----------
-    r : numpy.ndarray
-        Array (or float) of nondimensionalized distance between two beads. Reported in [Å] or :math:`r'=r (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
-    potential : numpy.ndarray
-        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". Reported in units reduced by the Boltzmann constant, [K] or nondimensionalized as :math:`\phi'=\phi/(3k_{B}T)`
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
     plot_opts : dict, Optional, default={}
         Keyword arguments for matplotlib.pyplot.plot
     show : bool, Optional, default=True
@@ -85,8 +34,167 @@ def plot_potential(r, potential, plot_opts={}, show=True):
         plot_fit = False
 
     if plot_fit:
-        plt.xlabel("Dimensionless Distance")
-        plt.ylabel("Dimensionless Potential")
+        plt.figure(1, figsize=(4, 4))
+     
+        if not nondimensional:
+            plt.xlabel("r [Å]")
+            if temperature != None:
+                plt.ylabel("Potential at {}K [kcal/mol]".format(temperature))
+            else:
+                plt.ylabel("Potential [kcal/mol]")
+        else:
+            plt.xlabel("Dimensionless Distance")
+            plt.ylabel("Dimensionless Potential")
+
+        if "label" in plot_opts:
+            del plot_opts["label"]
+        plt.plot(r, potential, label="Multipole Total", **plot_opts)
+        if potential_terms is not None:
+            if np.shape(potential_terms)[0] == 4:
+                plt.plot(r, potential_terms[0], label="O(-4)", **plot_opts)
+                plt.plot(r, potential_terms[1], label="O(-6)", **plot_opts)
+                plt.plot(r, potential_terms[2], label="O(-8)", **plot_opts)
+                plt.plot(r, potential_terms[3], label="O(-10)", **plot_opts)
+            elif np.shape(potential_terms)[0] == 9:
+                # dipole-quadrupole, induced_dipole-quadrupole, quadrupole-quadrupole
+                plt.plot(r, potential_terms[0], label=r"$q-\mu$", **plot_opts)
+                plt.plot(r, potential_terms[1], label=r"$q-\mu_{induced}$", **plot_opts)
+                plt.plot(r, potential_terms[2], label=r"$\mu_{induced}-\mu_{induced}$", **plot_opts)
+                plt.plot(r, potential_terms[3], label=r"$\mu-\mu$", **plot_opts)
+                plt.plot(r, potential_terms[4], label=r"$\mu-\mu_{induced}$", **plot_opts)
+                plt.plot(r, potential_terms[5], label=r"$q-Q$", **plot_opts)
+                plt.plot(r, potential_terms[6], label=r"$\mu-Q$", **plot_opts)
+                plt.plot(r, potential_terms[7], label=r"$\mu_{induced}-Q$", **plot_opts)
+                plt.plot(r, potential_terms[8], label=r"$Q-Q$", **plot_opts)
+            else:
+                raise ValueError(
+                    "Multipole terms input should be either of length 4 or length 9 for the supported interaction types.")
+            plt.legend(loc="best")
+
+        plt.tight_layout()
+        if show:
+            plt.show()
+
+def plot_multipole_potential_from_dict(bead1, bead2, distance_opts={}, polarizability_opts={}, nondimensional=False, temperature=None, plot_terms=True, plot_opts={}, show=True):
+    r"""
+    Plot multipole potential and if provided, the contribution of each multipole interaction. If the polarizability is not provided in the bead dictionaries, it is calculated.
+    
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+    
+    Parameters
+    ----------
+    beadA : dict
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
+        
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi \varepsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi \varepsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [:math:`Å^3`] or nondimensionalized with :math:`\alpha'=\alpha (4 \pi \varepsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+
+    beadB : dict
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
+        
+        - charge (float) Charge of bead in [e], or nondimensionalized as :math:`q'=q/e`
+        - dipole (float) Dipole of bead in [Debye], or nondimensionalized as :math:`\mu'=\mu (4 \pi \varepsilon_{0}) 3k_{B}T e^{-3}`
+        - quadrupole (float) Quadrupole of bead in [Debye*angstrom], or nondimensionalized as :math:`Q'=Q (4 \pi \varepsilon_{0})^{2} (3k_{B}T)^{2} e^{-5}`
+        - ionization_energy (float) Ionization_energy of bead in [kcal/mol], or nondimensionalized as :math:`I'=I/(3k_{B}T)`
+        - polarizability (float) Polarizability of bead in [:math:`Å^3`] or nondimensionalized with :math:`\alpha'=\alpha (4 \pi \varepsilon_{0}) 3k_{B}T  e^{-6}`, where the dimensionalized version is the polarizability volume
+
+    distance_opts : dict, Optional, default={}
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+    polarizability_opts : dict, Optional, default={}
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_mie_combining_rules.fit_polarizability` or :func:`~mapsci.multipole_mie_combining_rules.solve_polarizability_integral`
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+    plot_terms : bool, Optional, default=False
+        Enable plotting of multipole terms corresponds to the coefficients for r to the order of -4, -6, -8, and -10, or a list of nine terms terms corresponding to the coefficients the various multipole interactions. Calculated from :func:`~mapsci.multipole_mie_combining_rules.calc_cross_multipole_terms`
+    plot_opts : dict, Optional, default={}
+        Keyword arguments for matplotlib.pyplot.plot
+    show : bool, Optional, default=True
+        Dictate whether plt.show() should be executed within this function
+    """
+
+    try:
+        import matplotlib.pyplot as plt
+        plot_fit = True
+    except:
+        logger.error("Package matplotlib is not available")
+        plot_fit = False
+
+    if plot_fit:
+
+        if not nondimensional:
+            if temperature is None:
+                raise ValueError("Temperature should be included when 'nondimensional' is False")
+            beadA = mr.dict_dimensions(bead1.copy(), temperature, dimensions=False)
+            beadB = mr.dict_dimensions(bead2.copy(), temperature, dimensions=False)
+        else:
+            beadA = bead1.copy()
+            beadB = bead2.copy()
+
+        if "polarizability" not in beadA:
+            beadA = mr.calc_polarizability(beadA, distance_opts=distance_opts, nondimensional=True, polarizability_opts=polarizability_opts)
+        if "polarizability" not in beadB:
+            beadB = mr.calc_polarizability(beadB, distance_opts=distance_opts, nondimensional=True, polarizability_opts=polarizability_opts)
+
+        beadAB = mr.mie_combining_rules(beadA, beadB)
+        r = mr.calc_distance_array(beadAB, **distance_opts)
+        multipole_terms = mr.calc_cross_multipole_terms(beadA, beadB, nondimensional=True) 
+        potential, potential_terms = mr.calc_cross_multipole_potential(r, multipole_terms, nondimensional=True, total_only=False)
+
+        if not nondimensional:
+            r = mr.float_dimensions(r, "sigma", temperature, dimensions=True)
+            potential = mr.float_dimensions(potential, "ionization_energy", temperature, dimensions=True)
+            potential_terms = mr.float_dimensions(potential_terms, "ionization_energy", temperature, dimensions=True)
+
+        opts = {"plot_opts": plot_opts, "show": show, "nondimensional": nondimensional, "temperature": temperature}
+        if plot_terms:
+            opts["potential_terms"] = potential_terms
+
+        plot_multipole_potential(r, potential, **opts)
+
+def plot_potential(r, potential, plot_opts={}, nondimensional=False, temperature=None, show=True):
+    r"""
+    Plot given potential
+    
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+
+    Parameters
+    ----------
+    r : numpy.ndarray
+        Array (or float) of nondimensionalized distance between two beads. Reported in [Å] or :math:`r'=r (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
+    potential : numpy.ndarray
+        Array of nondimensionalized potential between beads based on multipole moments. Array is equal in length to "r". Reported in units reduced by the Boltzmann constant, [K] or nondimensionalized as :math:`\phi'=\phi/(3k_{B}T)`
+    plot_opts : dict, Optional, default={}
+        Keyword arguments for matplotlib.pyplot.plot
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+    show : bool, Optional, default=True
+        Dictate whether plt.show() should be executed within this function
+    """
+
+    try:
+        import matplotlib.pyplot as plt
+        plot_fit = True
+    except:
+        logger.error("Package matplotlib is not available")
+        plot_fit = False
+
+    if plot_fit:
+        if not nondimensional:
+            plt.xlabel("r [Å]")
+            if temperature != None:
+                plt.ylabel("Potential at {}K [kcal/mol]".format(temperature))
+            else:
+                plt.ylabel("Potential [kcal/mol]")
+        else:
+            plt.xlabel("Dimensionless Distance")
+            plt.ylabel("Dimensionless Potential")
 
         plt.plot(r, potential, **plot_opts)
 
@@ -94,6 +202,83 @@ def plot_potential(r, potential, plot_opts={}, show=True):
             plt.legend(loc="best")
             plt.tight_layout()
             plt.show()
+
+def plot_attractive_mie_potential_from_dict(beadA, beadB, beadAB={}, distance_opts={}, nondimensional=False, temperature=None, plot_opts={}, show=True):
+    r"""
+    Plot the attractive component of the Mie potential and if provided.
+    
+    Nondimensional parameters are scaled using the following physical constants: vacuum permittivity, :math:`\varepsilon_{0}`, Boltzmann constant, :math:`k_{B}`, and elementary charge, :math:`e`.
+    
+    Parameters
+    ----------
+    beadA : dict
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
+        
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as :math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [Å], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
+        - lambdar (float) Repulsive exponent
+        - lambdaa (float) Attractive exponent
+
+    beadB : dict
+        Dictionary of a bead's Mie and multipole parameters. Those parameters may be:
+        
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as :math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [Å], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
+        - lambdar (float) Repulsive exponent
+        - lambdaa (float) Attractive exponent
+
+    beadAB : dict, Optional, default={}
+        Dictionary of cross-interaction parameters for Mie potential.
+        
+        - epsilon (float) Energy parameter in [K], or nondimensionalized as :math:`\epsilon'=\epsilon/(3k_{B}T)`
+        - sigma (float) Size parameter in [Å], or nondimensionalized as :math:`\sigma'=\sigma (4 \pi \varepsilon_{0}) 3k_{B}T e^{-2}`
+        - lambdar (float) Repulsive exponent
+        - lambdaa (float) Attractive exponent
+
+    distance_opts : dict, Optional, default={}
+        Dictionary of keyword arguments for :func:`~mapsci.multipole_mie_combining_rules.calc_distance_array`
+    temperature : float, Optional, default=None
+        Temperature in [K] for adding and removing dimensions, if the parameters are nondimensionalized, this value isn't used.
+    nondimensional : bool, Optional, default=False
+        Indicates whether the given bead library has been nondimensionalized by :func:`~mapsci.multipole_mie_combining_rules.dict_dimensions`
+    plot_opts : dict, Optional, default={}
+        Keyword arguments for matplotlib.pyplot.plot
+    show : bool, Optional, default=True
+        Dictate whether plt.show() should be executed within this function
+    """
+
+    try:
+        import matplotlib.pyplot as plt
+        plot_fit = True
+    except:
+        logger.error("Package matplotlib is not available")
+        plot_fit = False
+
+    if plot_fit:
+
+        if not nondimensional:
+            if temperature is None:
+                raise ValueError("Temperature should be included when 'nondimensional' is False")
+            bead1 = mr.dict_dimensions(beadA.copy(), temperature, dimensions=False)
+            bead2 = mr.dict_dimensions(beadB.copy(), temperature, dimensions=False)
+            bead12_tmp = mr.dict_dimensions(beadAB.copy(), temperature, dimensions=False)
+        else:
+            bead1 = beadA.copy()
+            bead2 = beadB.copy()
+            bead12_tmp = beadAB.copy()
+
+        bead12 = mr.mie_combining_rules(bead1, bead2)
+        bead12.update(bead12_tmp)
+
+        r = mr.calc_distance_array(bead12, **distance_opts)
+        potential = mr.calc_mie_attractive_potential(r, bead12)
+
+        if not nondimensional:
+            r = mr.float_dimensions(r, "sigma", temperature, dimensions=True)
+            potential = mr.float_dimensions(potential, "ionization_energy", temperature, dimensions=True)
+
+        plot_potential(r, potential, plot_opts=plot_opts, show=show)
+
 
 def plot_abs_dev_mie_multipole_potentials(bead_dict0, beadAB={}, distance_opts={}, temperature=None, nondimensional=False, plot_opts={}, axs=None, title=None, ylabel="default", xlabel="default"):
     r"""
@@ -153,7 +338,7 @@ def plot_abs_dev_mie_multipole_potentials(bead_dict0, beadAB={}, distance_opts={
 
         if not nondimensional:
             if temperature is None:
-                logger.error("Temperature should be included with 'nondimensional' is False")
+                raise ValueError("Temperature should be included with 'nondimensional' is False")
             bead_dict = mr.dict_dimensions(bead_dict0.copy(), temperature, dimensions=False)
             if len(beadAB) > 0:
                 beadAB0 = mr.dict_dimensions(beadAB.copy(), temperature, dimensions=False)
@@ -165,7 +350,7 @@ def plot_abs_dev_mie_multipole_potentials(bead_dict0, beadAB={}, distance_opts={
             keys = list(bead_dict.keys())
             flag = True
         elif np.any(tmp):
-            raise ValueError("Dictionary should be either a single beads parameters, or a dictionary of dictionaries containing the parameters of several beads.")
+            raise ValueError("Dictionary should be either a single bead's parameters, or a dictionary of dictionaries containing the parameters of several beads.")
         else:
             flag = False 
 
@@ -175,17 +360,15 @@ def plot_abs_dev_mie_multipole_potentials(bead_dict0, beadAB={}, distance_opts={
                 bead12.update(beadAB0)
 
             r = mr.calc_distance_array(bead12, **distance_opts)
-
             w_Mie = mr.calc_mie_attractive_potential(r, bead12)
             multipole_terms = mr.calc_cross_multipole_terms(bead_dict[keys[0]], bead_dict[keys[1]], nondimensional=True)
-            w_multipole, potential_terms = mr.calc_cross_multipole_potential(r,multipole_terms, total_only=False)
+            w_multipole, potential_terms = mr.calc_cross_multipole_potential(r, multipole_terms, nondimensional=True, total_only=False)
 
         else:
             r = mr.calc_distance_array(bead_dict, **distance_opts)
-
             w_Mie = mr.calc_mie_attractive_potential(r, bead_dict)
             multipole_terms = mr.calc_cross_multipole_terms( bead_dict, bead_dict, nondimensional=True)
-            w_multipole, potential_terms = mr.calc_cross_multipole_potential(r,multipole_terms, total_only=False)
+            w_multipole, potential_terms = mr.calc_cross_multipole_potential(r, multipole_terms, nondimensional=True, total_only=False)
 
         y = w_Mie-w_multipole
 
@@ -346,10 +529,10 @@ def plot_cross_potential_absolute_deviation(beadA, beadB, temperature=None, nond
         else: 
             bead1 = beadA.copy()
 
-        if "polarizability" not in beadA:
+        if "polarizability" not in beadB:
             bead2 = mr.calc_polarizability(beadB.copy(), distance_opts=distance_opts, nondimensional=nondimensional, temperature=temperature, polarizability_opts=polarizability_opts)
         else:
-            bead2 = beadA.copy()
+            bead2 = beadB.copy()
 
         bead_library_new = {"bead1": bead1, "bead2": bead2}
 
@@ -428,9 +611,14 @@ def plot_mie_multipole_integral_difference(beadA, beadB, temperature, polarizabi
                 tmp_library = mr.calc_polarizability(bead_library, temperature=temperature, distance_opts=distance_opts, polarizability_opts=polarizability_opts)
 
                 beadAB = mr.fit_multipole_cross_interaction_parameter(tmp_library["bead1"], tmp_library["bead2"], distance_opts=distance_opts, temperature=temperature)
-                Cmulti, _ = mr.multipole_integral(tmp_library["bead1"], tmp_library["bead2"],  lower_bound=lb, temperature=temperature)
-                CMie = mr.mie_integral(beadAB, lower_bound=lb)
-        
+                if lb == "rmin":
+                    sigma0 = mr.mie_potential_minimum(beadAB)
+                elif lb == "sigma":
+                    sigma0 = beadAB["sigma"]
+
+                Cmulti, _ = mr.multipole_integral(tmp_library["bead1"], tmp_library["bead2"], sigma0=sigma0, temperature=temperature)
+                CMie = mr.mie_integral(beadAB, sigma0=sigma0)
+
                 var_array[i].append([Cmulti, CMie])
 
         var_array = [np.transpose(np.array(var_array[0])), np.transpose(np.array(var_array[1]))]
@@ -441,14 +629,14 @@ def plot_mie_multipole_integral_difference(beadA, beadB, temperature, polarizabi
             axs[i].plot(max_factors,var_array[i][1],label="Mie")
             ax2 = axs[i].twinx()
             ax2.tick_params(axis='y', labelcolor="r")
-            ax2.plot(max_factors, var_array[i][0]-var_array[i][1], "r")
+            ax2.plot(max_factors, np.abs(var_array[i][0]-var_array[i][1]), "r")
             if i == 1:
-                ax2.set_ylabel('Difference')
+                ax2.set_ylabel('Abs. Deviation')
             elif i == 0:
-                axs[i].legend(loc="best")
+                axs[i].legend(loc=2)
         
-        axs[0].set_title("{} Integral to Infinity".format(labels[lower_bounds[0]]))
-        axs[1].set_title("{} Integral to Infinity".format(labels[lower_bounds[1]]))
+        axs[0].set_title("Int. from {} to $\infty$".format(labels[lower_bounds[0]]))
+        axs[1].set_title("Int. from {} to $\infty$".format(labels[lower_bounds[1]]))
         axs[0].set_xlabel("Max Factor")
         axs[1].set_xlabel("Max Factor")
         plt.tight_layout()
