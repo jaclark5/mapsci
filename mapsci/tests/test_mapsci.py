@@ -33,7 +33,10 @@ def test_mapsci_log_file():
     if os.path.isfile(fname):
         flag = True
         mapsci.initiate_logger(log_file=False)
-        os.remove(fname)
+        try:
+            os.remove(fname)
+        except:
+            print("Error removing log file")
     else:
         flag = False
 
